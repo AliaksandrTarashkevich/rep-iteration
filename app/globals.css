@@ -1,0 +1,401 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* REP Tokens — mirrors rep-web-next. Single source of truth. */
+:root {
+  /* Brand */
+  --bg: #010101;
+  --bg-2: #0a0a0a;
+  --ink: #ffffff;
+  --ink-mute: rgba(255, 255, 255, 0.68);
+  --ink-faint: rgba(255, 255, 255, 0.50);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --card-bg-2: rgba(255, 255, 255, 0.06);
+  --pill-bg: #181818;
+  --pill-line: rgba(255, 255, 255, 0.7);
+
+  /* Accent */
+  --accent: #8CD5FE;
+  --accent-deep: #5CC3FF;
+  --accent-dim: rgba(140, 213, 254, 0.18);
+  --gold: #E6B450;
+  --gold-dim: rgba(230, 180, 80, 0.16);
+
+  /* Semantic */
+  --ok: #7DD3A5;
+  --warn: #E8A259;
+  --bad: #E86A6A;
+
+  /* Category */
+  --cat-green: #7DD3A5;
+  --cat-cyan: #8CD5FE;
+  --cat-orange: #F29933;
+  --cat-purple: #B99BFF;
+  --cat-red: #FF6B6B;
+
+  /* Typography (filled by next/font/google variables in layout.tsx) */
+  --ff-ui: var(--font-space-grotesk), system-ui, sans-serif;
+  --ff-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --ff-serif: var(--font-fraunces), Georgia, serif;
+
+  /* Spacing / radius / elevation */
+  --s1: 8px;
+  --s2: 16px;
+  --s3: 24px;
+  --s4: 32px;
+  --s5: 48px;
+  --s6: 64px;
+  --s7: 96px;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --radius-md: 14px;
+  --radius-pill: 85px;
+  --glow-accent: 0 0 40px rgba(140, 213, 254, 0.20);
+  --emboss: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* ── Shadcn bridge — REP tokens mapped to shadcn var names so existing
+     primitives (Dialog, Sheet, Popover, Select, Sidebar, etc.) keep
+     rendering without rewrites. */
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--card-bg);
+  --card-foreground: var(--ink);
+  --popover: var(--bg-2);
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: #021319;
+  --secondary: var(--card-bg);
+  --secondary-foreground: var(--ink);
+  --muted: var(--card-bg);
+  --muted-foreground: var(--ink-mute);
+  --accent-foreground: #021319;
+  --destructive: var(--bad);
+  --destructive-foreground: #ffffff;
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--accent);
+  --positive: var(--ok);
+  --warning: var(--warn);
+  --sidebar: var(--bg-2);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: #021319;
+  --sidebar-accent: var(--card-bg);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--accent);
+}
+
+@theme inline {
+  --font-sans: var(--ff-ui);
+  --font-mono: var(--ff-mono);
+  --font-serif: var(--ff-serif);
+
+  /* REP color tokens (bg-accent, text-ink, border-line, etc.) */
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-ink: var(--ink);
+  --color-ink-mute: var(--ink-mute);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-card-bg: var(--card-bg);
+  --color-card-bg-2: var(--card-bg-2);
+  --color-pill-bg: var(--pill-bg);
+  --color-pill-line: var(--pill-line);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-dim: var(--accent-dim);
+  --color-gold: var(--gold);
+  --color-gold-dim: var(--gold-dim);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-cat-green: var(--cat-green);
+  --color-cat-cyan: var(--cat-cyan);
+  --color-cat-orange: var(--cat-orange);
+  --color-cat-purple: var(--cat-purple);
+  --color-cat-red: var(--cat-red);
+
+  /* Shadcn-compat color tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-positive: var(--positive);
+  --color-warning: var(--warning);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Spacing — accessible as p-s1, gap-s3, m-s5, etc. */
+  --spacing-s1: var(--s1);
+  --spacing-s2: var(--s2);
+  --spacing-s3: var(--s3);
+  --spacing-s4: var(--s4);
+  --spacing-s5: var(--s5);
+  --spacing-s6: var(--s6);
+  --spacing-s7: var(--s7);
+
+  /* Radius */
+  --radius-sm: 12px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 85px;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--ff-ui);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* Ambient body background — replaces AnimatedGraphBackground */
+.rep-ambient {
+  background-image:
+    radial-gradient(ellipse at 10% -10%, rgba(71, 169, 255, 0.06), transparent 50%),
+    radial-gradient(ellipse at 110% 110%, rgba(71, 169, 255, 0.04), transparent 55%);
+}
+
+/* Stories grid pattern background — subtle cross marks on dark, M5 reference */
+.story-grid-bg {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 30%, rgba(140, 213, 254, 0.10), transparent 55%),
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+  background-position: center top, 0 0, 0 0;
+}
+
+/* ── Primitives — port from rep-web-next ── */
+@layer components {
+  .title {
+    font-family: var(--ff-ui);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.04;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--ink);
+  }
+  .title em {
+    font-family: var(--ff-serif);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--ff-mono);
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 1;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .kicker::before {
+    content: '';
+    width: 56px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .num {
+    font-family: var(--ff-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    font-feature-settings: 'tnum' 1, 'ss01' 1;
+  }
+
+  .tile {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: var(--s3);
+  }
+  .tile--accent {
+    background: var(--accent-dim);
+    border-color: rgba(140, 213, 254, 0.30);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 18px;
+    background: var(--pill-bg);
+    border: 1px solid var(--pill-line);
+    border-radius: var(--radius-pill);
+    color: var(--ink);
+    font-family: var(--ff-ui);
+    font-weight: 500;
+    font-size: 12.5px;
+    line-height: 1;
+    cursor: pointer;
+    transition: opacity 0.16s ease;
+  }
+  .pill:hover {
+    opacity: 0.85;
+  }
+  .pill--ghost {
+    background: transparent;
+    border-color: var(--line-strong);
+  }
+  .pill--accent {
+    background: var(--accent);
+    color: #021319;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .pill--sm {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 11px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    color: rgba(255, 255, 255, 0.8);
+    font-family: var(--ff-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .chip--accent {
+    background: rgba(140, 213, 254, 0.08);
+    border-color: rgba(140, 213, 254, 0.25);
+    color: var(--accent);
+  }
+
+  .mono-cap {
+    font-family: var(--ff-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-faint);
+  }
+  .mono-cap-sm {
+    font-family: var(--ff-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink-faint);
+  }
+}
+
+/* DEPRECATED aliases — temporary shim during the redesign port.
+   Removed in Phase F sweep once all call-sites are updated. */
+.glass-card,
+.solid-card,
+.achievement-card-available,
+.summary-card-liquid,
+.story-card-shimmer {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.glass-inner,
+.figma-button,
+.card-glow-top,
+.section-title,
+.rep-value,
+.tier-badge,
+.avatar-ring,
+.glow,
+.box-glow,
+.metallic-text-silver,
+.stat-glow-ring,
+.pull-quote-mint,
+.silver-border-card,
+.rep-watermark,
+.rep-watermark-dot {
+  /* no-op — minimal aesthetic drops these effects */
+}
+.gradient-ray-bg {
+  display: none;
+}
+
+/* Thin scrollbar — used inside floating panels (achievement picker, etc.) */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.40);
+}
+
+/* Default scrollbar — minimal, theme-matched */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
