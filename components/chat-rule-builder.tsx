@@ -19,25 +19,15 @@
  *     └── requirement #2: OR-group of achievements (any one counts)
  *     └── ...
  *
- *   Example: gate a chat with
- *     `(Gold Olympics OR Gold World Cup) AND (Hockey OR Football)`
- *   The creator just adds two requirement rows — the first with the two
- *   gold medals, the second with the two sports. No operator toggles, no
- *   "add sub-group" button, no parentheses. The words AND / OR never
- *   appear as controls; they only appear in the natural-language preview.
- *
- * Rule shape (kept intentionally generic so we can evolve it later without
- * a migration) stays:
- *
- *   type RuleNode =
- *     | { type: "achievement"; achievementId: string }
- *     | { type: "group"; op: "and" | "or"; children: RuleNode[] }
+ * Adding achievements: the picker is OUT. The catalog lives next to this
+ * builder (AchievementCatalog component). Each requirement card has an
+ * "active" state — the next achievement picked from the catalog lands in
+ * the active row. Tapping a non-active row activates it. The "+ OR" inline
+ * button is gone for the same reason: one mental model, not two.
  */
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { EcosystemIcon } from "@/components/icons"
 
 // ---------------------------------------------------------------------------
@@ -72,6 +62,12 @@ interface ChatRuleBuilderProps {
   achievements: AchievementOption[]
   /** How many achievement leaves the entire rule may contain. */
   maxTotal?: number
+  /** Index of the currently-active requirement (next pick lands here). */
+  activeIndex: number
+  /** Set the active requirement (clicking a row activates it). */
+  onActivate: (index: number) => void
+  /** Optional id of the most recently added chip — used to play arrival anim. */
+  recentlyAddedAchievementId?: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -92,8 +88,6 @@ function collectAchievementIds(node: RuleNode): string[] {
  * Natural-language preview for the plain-English hint box. We keep each
  * requirement on its own bulleted line and only use lowercase "or" within
  * a row — this reads like a checklist, not like code.
- *
- * Returns an array of strings, one per requirement row.
  */
 function formatRequirementRows(
   node: Extract<RuleNode, { type: "group" }>,
@@ -120,12 +114,7 @@ function formatRequirementRows(
 
 /**
  * Coerce any incoming RuleNode into the strict two-level shape the UI
- * expects (root AND of OR-groups). Handles legacy data and defensive cases:
- *   - bare achievement leaf → wrap as one OR-requirement with one option
- *   - a single OR-group → wrap in an AND-root with that one requirement
- *   - an AND-group whose children are a mix of leaves / OR-groups / ANDs →
- *     wrap bare leaves as single-option OR-requirements, keep OR children,
- *     flatten accidental ANDs into an OR of their leaves.
+ * expects (root AND of OR-groups). Handles legacy data and defensive cases.
  */
 function normalize(node: RuleNode): Extract<RuleNode, { type: "group" }> {
   const wrapAsOr = (n: RuleNode): Extract<RuleNode, { type: "group" }> => {
@@ -133,7 +122,6 @@ function normalize(node: RuleNode): Extract<RuleNode, { type: "group" }> {
       return { type: "group", op: "or", children: [n] }
     }
     if (n.op === "or") return n
-    // Accidental AND where we wanted OR — flatten its leaves into an OR row.
     const leaves = collectAchievementIds(n).map<RuleNode>((id) => ({
       type: "achievement",
       achievementId: id,
@@ -173,6 +161,9 @@ export function ChatRuleBuilder({
   onChange,
   achievements,
   maxTotal = 10,
+  activeIndex,
+  onActivate,
+  recentlyAddedAchievementId,
 }: ChatRuleBuilderProps) {
   const byId = useMemo(
     () => new Map(achievements.map((a) => [a.id, a])),
@@ -181,10 +172,6 @@ export function ChatRuleBuilder({
   const normalized = useMemo(() => normalize(rule), [rule])
   const total = countAchievements(normalized)
   const rows = formatRequirementRows(normalized, byId)
-  const usedIds = collectAchievementIds(normalized)
-
-  // Only one inline picker open at a time — keyed by requirement index.
-  const [pickerIndex, setPickerIndex] = useState<number | null>(null)
 
   const updateRequirement = (
     reqIndex: number,
@@ -206,22 +193,20 @@ export function ChatRuleBuilder({
         { type: "group", op: "or", children: [] },
       ],
     })
+    // Auto-activate the new requirement — user just created it, they're
+    // about to fill it.
+    onActivate(normalized.children.length)
   }
 
   const removeRequirement = (reqIndex: number) => {
-    // Keep at least one empty requirement visible as a drop target.
     if (normalized.children.length <= 1) return
     onChange({
       ...normalized,
       children: normalized.children.filter((_, i) => i !== reqIndex),
     })
-  }
-
-  const addAchievement = (reqIndex: number, achievementId: string) => {
-    updateRequirement(reqIndex, (g) => ({
-      ...g,
-      children: [...g.children, { type: "achievement", achievementId }],
-    }))
+    if (activeIndex >= normalized.children.length - 1) {
+      onActivate(Math.max(0, normalized.children.length - 2))
+    }
   }
 
   const removeAchievement = (reqIndex: number, achIndex: number) => {
@@ -235,21 +220,12 @@ export function ChatRuleBuilder({
 
   return (
     <div className="space-y-3">
-      {/* Header text ("Who can join? / Add what people need...") was
-          removed per design feedback — the example text was noisy and
-          the example + hint now live as the achievement picker's input
-          placeholder and the picker list's empty state. */}
-
       {/* ============ Live plain-English preview ============
-          The glanceable summary of the currently-configured rule tree.
-          Mint/teal accent + brighter background so it reads as the
-          *source of truth* at the top of the builder. */}
+          The glanceable summary of the gate. Uses tile--accent so it
+          matches the accent surfaces used elsewhere in the app. */}
       {hasAnyAchievement && (
-        <div
-          className="rounded-xl border border-accent/40 px-3 py-2.5 shadow-[0_0_20px_-10px_var(--accent-glow)]"
-          style={{ backgroundColor: "rgba(0, 210, 190, 0.08)" }}
-        >
-          <p className="mb-1.5 text-[10px] uppercase tracking-wider text-accent">
+        <div className="tile tile--accent">
+          <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-accent font-semibold">
             To join, members need
           </p>
           <ul className="space-y-1 text-sm leading-relaxed text-foreground">
@@ -279,21 +255,16 @@ export function ChatRuleBuilder({
                 total={normalized.children.length}
                 requirement={requirement}
                 byId={byId}
+                isActive={activeIndex === i}
                 canRemove={normalized.children.length > 1}
-                onAddClick={() => setPickerIndex(i)}
+                onActivate={() => onActivate(i)}
                 onRemoveAchievement={(achIndex) =>
                   removeAchievement(i, achIndex)
                 }
                 onRemoveRequirement={() => removeRequirement(i)}
-                atMaxTotal={total >= maxTotal}
-                pickerOpen={pickerIndex === i}
-                onClosePicker={() => setPickerIndex(null)}
-                onPickAchievement={(id) => {
-                  addAchievement(i, id)
-                  setPickerIndex(null)
-                }}
-                achievements={achievements}
-                excludeIds={usedIds}
+                recentlyAddedAchievementId={
+                  activeIndex === i ? recentlyAddedAchievementId : null
+                }
               />
             </div>
           )
@@ -301,26 +272,26 @@ export function ChatRuleBuilder({
       </div>
 
       {/* ============ AND — add another top-level requirement ============
-          Dashed primary-blue pill (matches the "+ Pick achievement" CTA
-          on the empty requirement card and the blue-framed wrapper
-          cards), so the two tappable "add something" affordances feel
-          like siblings in the same palette. */}
+          Uses the project's Pill primitive (ghost variant) so it reads as
+          part of the same UI vocabulary as the rest of the site. */}
       <div className="flex items-center justify-between pt-1">
         <button
           onClick={addRequirement}
           disabled={total >= maxTotal}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border border-dashed px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition-all",
+            "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all",
             total >= maxTotal
-              ? "cursor-not-allowed border-border text-muted-foreground/50"
-              : "border-primary/60 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:shadow-[0_0_14px_-4px_var(--accent-glow)]",
+              ? "cursor-not-allowed border-[var(--line)] text-[var(--ink-faint)] opacity-50"
+              : "border-[var(--line-strong)] text-[var(--ink)] hover:border-[rgba(140,213,254,0.4)] hover:text-accent",
           )}
-          aria-label="AND — add another requirement"
+          aria-label="Need something else too"
         >
-          <PlusIcon /> Add another rule
+          <PlusIcon /> Need something else too
         </button>
         {total >= maxTotal && (
-          <span className="text-xs text-warning">Max reached</span>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-warning">
+            Max reached
+          </span>
         )}
       </div>
     </div>
@@ -336,151 +307,173 @@ function RequirementCard({
   total,
   requirement,
   byId,
+  isActive,
   canRemove,
-  onAddClick,
+  onActivate,
   onRemoveAchievement,
   onRemoveRequirement,
-  atMaxTotal,
-  pickerOpen,
-  onClosePicker,
-  onPickAchievement,
-  achievements,
-  excludeIds,
+  recentlyAddedAchievementId,
 }: {
   index: number
   total: number
   requirement: Extract<RuleNode, { type: "group" }>
   byId: Map<string, AchievementOption>
+  isActive: boolean
   canRemove: boolean
-  onAddClick: () => void
+  onActivate: () => void
   onRemoveAchievement: (achIndex: number) => void
   onRemoveRequirement: () => void
-  atMaxTotal: boolean
-  pickerOpen: boolean
-  onClosePicker: () => void
-  onPickAchievement: (id: string) => void
-  achievements: AchievementOption[]
-  excludeIds: string[]
+  recentlyAddedAchievementId: string | null | undefined
 }) {
   const isEmpty = requirement.children.length === 0
   const multi = requirement.children.length > 1
 
-  // Plural copy changes based on how many achievements are in the row —
-  // empty / exactly one / multiple. Kept conversational.
-  const requirementCopy = isEmpty
-    ? "Pick what they need"
-    : multi
-      ? "They need any one of these"
-      : "They need this"
+  const handleCardClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("button")) return
+    if (!isActive) onActivate()
+  }
 
-  const headerLead =
-    total === 1 ? "" : `Requirement ${index + 1} — `
+  // Show the index badge only when there are multiple requirements -
+  // a single requirement doesn't need numbering.
+  const showIndex = total > 1
 
   return (
-    <div className="rounded-xl border border-primary/40 bg-primary/5 p-3">
-      {/* Header */}
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold text-primary">
+    <div
+      onClick={handleCardClick}
+      role={isActive ? undefined : "button"}
+      aria-current={isActive ? "true" : undefined}
+      aria-label={isActive ? undefined : `Activate requirement ${index + 1}`}
+      className={cn(
+        "tile relative transition-all",
+        isActive
+          ? "tile--accent shadow-[0_0_24px_-12px_rgba(140,213,254,0.4)]"
+          : "cursor-pointer hover:border-[rgba(140,213,254,0.25)]",
+      )}
+    >
+      {/* Top-right index badge (only when multiple requirements) */}
+      {showIndex && (
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          <span
+            className={cn(
+              "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 font-mono text-[10px] font-semibold tabular-nums",
+              isActive
+                ? "bg-[rgba(140,213,254,0.18)] text-accent"
+                : "bg-[rgba(255,255,255,0.06)] text-[var(--ink-faint)]",
+            )}
+          >
             {index + 1}
           </span>
-          <span className="truncate text-xs text-muted-foreground">
-            {headerLead}
-            <span className="text-foreground">{requirementCopy}</span>
-          </span>
-        </div>
-        {canRemove && (
-          <button
-            onClick={onRemoveRequirement}
-            className="p-1 text-muted-foreground transition-colors hover:text-destructive"
-            aria-label={`Remove requirement ${index + 1}`}
-          >
-            <XIcon />
-          </button>
-        )}
-      </div>
-
-      {/* Achievement chips (or empty placeholder) — the empty state
-          doubles as the primary CTA: clicking it opens the picker. Warm
-          primary tint + glow so it reads as the inviting "tap here" spot
-          rather than a greyed-out void. */}
-      {isEmpty ? (
-        <button
-          type="button"
-          onClick={onAddClick}
-          disabled={atMaxTotal || pickerOpen}
-          className={cn(
-            "w-full rounded-lg border border-dashed px-3 py-4 text-center transition-all",
-            atMaxTotal
-              ? "cursor-not-allowed border-border bg-muted/20"
-              : "border-primary/40 bg-primary/5 hover:border-primary/70 hover:bg-primary/10 hover:shadow-[0_0_18px_-8px_var(--accent-glow)]",
+          {canRemove && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onRemoveRequirement()
+              }}
+              className="p-0.5 text-[var(--ink-faint)] transition-colors hover:text-destructive"
+              aria-label={`Remove requirement ${index + 1}`}
+            >
+              <XIcon />
+            </button>
           )}
+        </div>
+      )}
+      {!showIndex && canRemove && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemoveRequirement()
+          }}
+          className="absolute right-3 top-3 p-0.5 text-[var(--ink-faint)] transition-colors hover:text-destructive"
+          aria-label={`Remove requirement ${index + 1}`}
         >
-          <p className="text-xs font-medium text-primary">
-            + Pick achievement
-          </p>
-          <p className="mt-1 text-[10px] italic text-muted-foreground">
-            e.g. Diamond PnL, Liquid Hands, Polymarket Trader
-          </p>
+          <XIcon />
         </button>
-      ) : (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {requirement.children.map((child, ai) => {
-            if (child.type !== "achievement") return null
-            const ach = byId.get(child.achievementId)
-            return (
-              <span
-                key={`${child.achievementId}-${ai}`}
-                className="inline-flex items-center gap-1.5"
-              >
-                {ai > 0 && (
-                  <span
-                    className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60"
-                    aria-hidden
-                  >
-                    or
-                  </span>
-                )}
-                <AchievementChip
-                  achievement={ach}
-                  onRemove={() => onRemoveAchievement(ai)}
-                />
-              </span>
-            )
-          })}
-        </div>
       )}
 
-      {/* "+ OR" — compact uppercase link to append an alternative
-          achievement to this requirement. Only shown once the row has at
-          least one chip, because an empty row already uses the big
-          dashed CTA above as its primary pick-achievement affordance. */}
-      {!isEmpty && (
-        <div className="mt-3">
-          <button
-            onClick={onAddClick}
-            disabled={atMaxTotal || pickerOpen}
+      {/* ============ Empty state ============
+          Designed as the inviting hero of the card, not a placeholder
+          inside it. Big icon + one-line copy, no double-border. */}
+      {isEmpty ? (
+        <div className="flex flex-col items-center justify-center text-center py-3">
+          <div
             className={cn(
-              "inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.2em] transition-colors",
-              atMaxTotal
-                ? "cursor-not-allowed text-muted-foreground/40"
-                : "text-primary/80 hover:text-primary",
+              "mb-2.5 flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+              isActive
+                ? "bg-[rgba(140,213,254,0.12)] text-accent"
+                : "bg-[rgba(255,255,255,0.04)] text-[var(--ink-faint)]",
             )}
-            aria-label="OR — add an alternative achievement"
           >
-            <PlusIcon /> OR
-          </button>
+            <BadgePlusIcon />
+          </div>
+          <p
+            className={cn(
+              "text-sm font-medium leading-tight",
+              isActive ? "text-foreground" : "text-[var(--ink-faint)]",
+            )}
+          >
+            {isActive ? "Pick what they need" : "Or pick something else"}
+          </p>
+          <p
+            className={cn(
+              "mt-1 text-xs",
+              isActive
+                ? "text-[rgba(255,255,255,0.55)]"
+                : "text-[var(--ink-faint)]",
+            )}
+          >
+            {isActive ? (
+              <>
+                <span className="hidden md:inline">Tap any achievement on the right.</span>
+                <span className="md:hidden">Tap any achievement below.</span>
+              </>
+            ) : (
+              "Tap to activate"
+            )}
+          </p>
         </div>
-      )}
+      ) : (
+        <>
+          {/* Header eyebrow - tells the user what this row means */}
+          <div className="mb-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-faint)] font-mono">
+              {multi ? "They need any of" : "They need"}
+            </p>
+          </div>
 
-      {/* Inline picker */}
-      {pickerOpen && (
-        <AchievementPicker
-          achievements={achievements}
-          excludeIds={excludeIds}
-          onPick={onPickAchievement}
-          onClose={onClosePicker}
-        />
+          <div className="flex flex-wrap items-center gap-1.5">
+            {requirement.children.map((child, ai) => {
+              if (child.type !== "achievement") return null
+              const ach = byId.get(child.achievementId)
+              return (
+                <span
+                  key={`${child.achievementId}-${ai}`}
+                  className="inline-flex items-center gap-1.5"
+                >
+                  {ai > 0 && (
+                    <span
+                      className="font-mono text-[9px] font-semibold uppercase tracking-wider text-[var(--ink-faint)]"
+                      aria-hidden
+                    >
+                      or
+                    </span>
+                  )}
+                  <AchievementChip
+                    achievement={ach}
+                    justAdded={recentlyAddedAchievementId === child.achievementId}
+                    onRemove={() => onRemoveAchievement(ai)}
+                  />
+                </span>
+              )
+            })}
+          </div>
+
+          {/* Active hint - subtle, sits below chips */}
+          {isActive && (
+            <p className="mt-3 text-[10px] font-mono uppercase tracking-[0.18em] text-accent/60">
+              + Tap to add more
+            </p>
+          )}
+        </>
       )}
     </div>
   )
@@ -491,16 +484,13 @@ function RequirementCard({
 // ---------------------------------------------------------------------------
 
 function AndDivider() {
-  // Pill badge uses the mint/teal accent (matches the advanced-section
-  // accent colour used on the summary card and section wrapper), so the
-  // AND between requirements reads as part of the same visual family.
   return (
-    <div className="flex items-center gap-3 py-1.5">
-      <div className="h-px flex-1 bg-border" />
-      <span className="rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent shadow-[0_0_10px_-4px_var(--accent-glow)]">
-        and also
+    <div className="flex items-center gap-3 py-2">
+      <div className="h-px flex-1 bg-[rgba(140,213,254,0.2)]" />
+      <span className="rounded-full bg-[rgba(140,213,254,0.1)] px-2.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-accent">
+        and
       </span>
-      <div className="h-px flex-1 bg-border" />
+      <div className="h-px flex-1 bg-[rgba(140,213,254,0.2)]" />
     </div>
   )
 }
@@ -511,9 +501,11 @@ function AndDivider() {
 
 function AchievementChip({
   achievement,
+  justAdded,
   onRemove,
 }: {
   achievement?: AchievementOption
+  justAdded: boolean
   onRemove: () => void
 }) {
   if (!achievement) {
@@ -531,26 +523,20 @@ function AchievementChip({
     )
   }
 
-  // Category tint — a tiny coloured dot + subtle border/bg so users can
-  // scan a long requirement row and *see* the mix of onchain (blue) vs
-  // social (green) achievements without reading every label.
+  // 1px left-border accent line replaces the previous colored dot.
   const isOnchain = achievement.category === "onchain"
-  const dotClass = isOnchain ? "bg-primary" : "bg-accent"
-  const borderClass = isOnchain
-    ? "border-primary/25"
-    : "border-accent/30"
+  const accentLine = isOnchain ? "before:bg-primary/70" : "before:bg-accent/70"
 
   return (
     <div
       className={cn(
-        "group inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1",
-        borderClass,
+        "group relative inline-flex items-center gap-1.5 overflow-hidden rounded-md border border-border/70 bg-card pl-3 pr-2 py-1",
+        "before:absolute before:left-0 before:top-1/2 before:h-3 before:w-px before:-translate-y-1/2",
+        accentLine,
+        justAdded &&
+          "animate-in zoom-in-95 fade-in duration-200 shadow-[0_0_12px_-4px_rgba(80,120,255,0.4)]",
       )}
     >
-      <span
-        className={cn("h-1.5 w-1.5 flex-shrink-0 rounded-full", dotClass)}
-        aria-hidden
-      />
       <EcosystemIcon
         ecosystem={achievement.ecosystem}
         className="h-3 w-3 flex-shrink-0 text-muted-foreground"
@@ -558,7 +544,7 @@ function AchievementChip({
       <span className="text-xs font-medium text-foreground">
         {achievement.name}
       </span>
-      <span className="font-mono text-[10px] text-primary">
+      <span className="font-mono text-[10px] tabular-nums text-primary">
         {achievement.repValue}
       </span>
       <button
@@ -573,125 +559,7 @@ function AchievementChip({
 }
 
 // ---------------------------------------------------------------------------
-// AchievementPicker — inline searchable list that appears under the row
-// when the user clicks "Pick achievement" / "Add alternative".
-// ---------------------------------------------------------------------------
-
-type PickerFilter = "all" | "onchain" | "social"
-
-function AchievementPicker({
-  achievements,
-  excludeIds,
-  onPick,
-  onClose,
-}: {
-  achievements: AchievementOption[]
-  excludeIds: string[]
-  onPick: (id: string) => void
-  onClose: () => void
-}) {
-  const [query, setQuery] = useState("")
-  const [filter, setFilter] = useState<PickerFilter>("all")
-
-  const filtered = useMemo(() => {
-    const excluded = new Set(excludeIds)
-    return achievements
-      .filter((a) => !excluded.has(a.id))
-      .filter((a) => (filter === "all" ? true : a.category === filter))
-      .filter((a) => {
-        if (!query.trim()) return true
-        const q = query.trim().toLowerCase()
-        return (
-          a.name.toLowerCase().includes(q) ||
-          a.description.toLowerCase().includes(q) ||
-          a.ecosystem.toLowerCase().includes(q)
-        )
-      })
-      .sort((a, b) => b.repValue - a.repValue)
-  }, [achievements, excludeIds, filter, query])
-
-  return (
-    // Glass-morphism: translucent background + backdrop-blur so the
-    // picker feels like it's floating above the requirement row rather
-    // than being part of it. A thin accent border sells the "panel" look.
-    <div
-      className="mt-3 animate-in fade-in slide-in-from-top-1 rounded-xl border border-accent/20 p-3 duration-150 backdrop-blur-md shadow-[0_8px_32px_-12px_rgba(0,0,0,0.6)]"
-      style={{ backgroundColor: "rgba(10, 13, 17, 0.72)" }}
-    >
-      <div className="mb-2 flex items-center gap-2">
-        <Input
-          autoFocus
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="e.g. Diamond Hands, DeFi OG, Early Adopter..."
-          className="h-8 text-sm"
-        />
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onClose}
-          className="h-8 px-2 text-muted-foreground"
-        >
-          Cancel
-        </Button>
-      </div>
-
-      <div className="mb-2 flex items-center gap-1">
-        {(["all", "onchain", "social"] as const).map((id) => (
-          <button
-            key={id}
-            onClick={() => setFilter(id)}
-            className={cn(
-              "rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors",
-              filter === id
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/70",
-            )}
-          >
-            {id === "all" ? "All" : id === "onchain" ? "Onchain" : "Social"}
-          </button>
-        ))}
-      </div>
-
-      <div className="thin-scrollbar -mx-1 max-h-64 space-y-1 overflow-y-auto px-1">
-        {filtered.length === 0 ? (
-          <p className="py-4 text-center text-xs italic text-muted-foreground">
-            Nothing matches.
-          </p>
-        ) : (
-          filtered.map((ach) => (
-            <button
-              key={ach.id}
-              onClick={() => onPick(ach.id)}
-              className="flex w-full items-start gap-2.5 rounded-lg border border-transparent p-2 text-left transition-colors hover:border-primary/30 hover:bg-primary/10"
-            >
-              <EcosystemIcon
-                ecosystem={ach.ecosystem}
-                className="mt-1 h-3.5 w-3.5 flex-shrink-0 text-muted-foreground"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {ach.name}
-                  </p>
-                  <span className="ml-auto font-mono text-[10px] text-primary">
-                    {ach.repValue}
-                  </span>
-                </div>
-                <p className="line-clamp-1 text-xs text-muted-foreground">
-                  {ach.description}
-                </p>
-              </div>
-            </button>
-          ))
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Tiny inline icons (kept local to avoid pulling a bigger icon set).
+// Tiny inline icons.
 // ---------------------------------------------------------------------------
 
 function PlusIcon() {
@@ -703,7 +571,7 @@ function PlusIcon() {
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-3.5 w-3.5"
+      className="h-3 w-3"
       aria-hidden
     >
       <path d="M12 5v14M5 12h14" />
@@ -728,9 +596,26 @@ function XIcon() {
   )
 }
 
+function BadgePlusIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+      aria-hidden
+    >
+      <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
+      <path d="M9 12h6M12 9v6" />
+    </svg>
+  )
+}
+
 // ---------------------------------------------------------------------------
-// Re-exports for consumers that want the raw helpers (e.g. chat detail page
-// rendering the full expression, or the catalog flattening to required ids).
+// Re-exports for consumers that want the raw helpers.
 // ---------------------------------------------------------------------------
 
 export { countAchievements, collectAchievementIds }

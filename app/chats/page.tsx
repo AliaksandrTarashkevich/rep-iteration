@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
-import { useAuth, RANK_TIERS, type RankTier } from "@/lib/auth-context"
+import { useAuth } from "@/lib/auth-context"
 import { getAvatarUrl, getPoolAvatarByIndex } from "@/lib/avatars"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -28,37 +29,9 @@ import {
   type RuleNode,
   type AchievementOption,
 } from "@/components/chat-rule-builder"
+import { AchievementCatalog } from "@/components/achievement-catalog"
 import { PageShell } from "@/components/ui/page-shell"
 import { Pill, Num, MonoCap } from "@/components/ui/primitives"
-
-// ---------------------------------------------------------------------------
-// Rank-tier + category colour maps
-// ---------------------------------------------------------------------------
-// Mirrors the `rankStyles` map used on profile / stories / summary-card so
-// the same tier renders in the same colour everywhere in the app. Each
-// entry bundles text-colour, an "active" border + bg, and an optional glow.
-const RANK_TIER_STYLES: Record<
-  RankTier,
-  { color: string; activeBorder: string; activeBg: string; glow: string }
-> = {
-  "ꙮ":      { color: "text-amber-400",         activeBorder: "border-amber-400/60",   activeBg: "bg-amber-400/15",   glow: "shadow-[0_0_14px_rgba(251,191,36,0.35)]" },
-  "yo":     { color: "text-primary",           activeBorder: "border-primary/60",     activeBg: "bg-primary/15",     glow: "shadow-[0_0_14px_var(--accent-glow)]" },
-  "ToT":    { color: "text-emerald-400",       activeBorder: "border-emerald-400/60", activeBg: "bg-emerald-400/15", glow: "shadow-[0_0_14px_rgba(52,211,153,0.3)]" },
-  "roko":   { color: "text-purple-400",        activeBorder: "border-purple-400/60",  activeBg: "bg-purple-400/15",  glow: "shadow-[0_0_12px_rgba(192,132,252,0.25)]" },
-  "droog":  { color: "text-sky-400",           activeBorder: "border-sky-400/60",     activeBg: "bg-sky-400/15",     glow: "" },
-  "cicada": { color: "text-muted-foreground",  activeBorder: "border-foreground/40",  activeBg: "bg-foreground/10",  glow: "" },
-  "pilgrim":{ color: "text-muted-foreground",  activeBorder: "border-foreground/40",  activeBg: "bg-foreground/10",  glow: "" },
-}
-
-// Tone palette for the 4 rank-category cards (Global REP / Social Graph /
-// Social Activity / Onchain Activity) — each card owns one brand colour
-// so they read as distinct buckets even when none is selected.
-const CATEGORY_TONES = {
-  primary: { color: "text-primary",     activeBorder: "border-primary/60",     activeBg: "bg-primary/15",     glow: "shadow-[0_0_14px_var(--accent-glow)]" },
-  accent:  { color: "text-accent",      activeBorder: "border-accent/60",      activeBg: "bg-accent/15",      glow: "shadow-[0_0_14px_rgba(0,210,190,0.35)]" },
-  purple:  { color: "text-purple-400",  activeBorder: "border-purple-400/60",  activeBg: "bg-purple-400/15",  glow: "shadow-[0_0_12px_rgba(192,132,252,0.3)]" },
-  amber:   { color: "text-amber-400",   activeBorder: "border-amber-400/60",   activeBg: "bg-amber-400/15",   glow: "shadow-[0_0_12px_rgba(251,191,36,0.3)]" },
-} as const
 
 // Ecosystem types - includes BNB (6 ecosystems per spec)
 type Ecosystem = "all" | "polymarket" | "hyperliquid" | "solana" | "ethereum" | "base" | "bnb"
@@ -173,12 +146,17 @@ const MAX_SELECTABLE_ACHIEVEMENTS = 10
 
 // ============================================================================
 // CREATE CHAT MODAL
-// Three inline sections:
-//   1. Rule builder — nested AND/OR expression with inline achievement picker.
-//   2. Optional name + description.
-//   3. Create CTA.
-// The rule builder component owns its own filter / search UI, so this modal
-// stays focused on naming and submission.
+// Two-pane layout on Step 1 (gates):
+//   - Left pane: rank tier selector + ChatRuleBuilder (the rule tree).
+//   - Right pane: AchievementCatalog (persistent, always visible).
+// Mobile: stacked vertically (50/50). Desktop: side-by-side.
+// Step 2 (details): single-pane name + description.
+// Step 3 (success): centered confirmation.
+//
+// "Active requirement" pattern: the next achievement picked from the catalog
+// lands in the currently-active requirement row. Tap a non-active row to
+// activate it. This replaces the old inline picker per V's 04/23 feedback
+// ("движение, это жизнь" — make the connection rule↔achievement spatial).
 // ============================================================================
 
 function CreateChatModal({
@@ -188,44 +166,85 @@ function CreateChatModal({
   onClose: () => void
   onChatCreated: (chat: CatalogChat) => void
 }) {
-  // The entire gate is now represented as a single rule tree. The root is
-  // always a group; by default "match any of" (OR), which is the loosest
-  // and most common case when creators first open the builder.
   const [rule, setRule] = useState<RuleNode>(() => createEmptyRule("or"))
   const [roomName, setRoomName] = useState("")
   const [description, setDescription] = useState("")
   const [isCreating, setIsCreating] = useState(false)
 
-  // 3-step wizard: "gates" → "details" → "success". Splitting the form
-  // across steps keeps each screen short and lets us show a proper
-  // success confirmation with a link to the newly-created chat at the
-  // end instead of dropping the user back into a modal.
   type WizardStep = "gates" | "details" | "success"
   const [step, setStep] = useState<WizardStep>("gates")
   const [createdChat, setCreatedChat] = useState<CatalogChat | null>(null)
 
-  // Rank gate: creators can require a minimum rank tier measured against
-  // one of 4 categories. Both are optional — if set they're ANDed with the
-  // achievement rule tree at match time.
-  //   category = "global"   → user.totalRep percentile rank tier
-  //   category = "social"   → social activity percentile
-  //   category = "graph"    → social graph percentile
-  //   category = "onchain"  → onchain activity percentile
-  type RankCategory = "global" | "social" | "graph" | "onchain"
-  const [minRank, setMinRank] = useState<RankTier | null>(null)
-  const [rankCategory, setRankCategory] = useState<RankCategory>("global")
+  // Rank-tier gate was removed per 04/27 retrospective ("убрать сложную
+  // ranks-логику") — chats are now gated purely by achievements.
+
+  // Active-requirement pattern: catalog picks land in this row. Defaults to
+  // the first (and only) row at modal open. Bumps to last when a new
+  // requirement is added; clamped if a requirement is removed.
+  const [activeRequirementIndex, setActiveRequirementIndex] = useState(0)
+
+  // Set briefly when an achievement is added — drives the chip's arrival
+  // animation in ChatRuleBuilder. Cleared after a frame budget.
+  const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
+
+  // Ref to the left-pane scrolling container — when a chip is added we
+  // scroll the active requirement into view so the user can see the
+  // arrival animation, even on cramped mobile heights.
+  const builderPaneRef = useRef<HTMLDivElement | null>(null)
 
   const totalSelected = countAchievements(rule)
+  const usedIds = useMemo(() => collectAchievementIds(rule), [rule])
+
+  // Keep activeRequirementIndex in range when the rule shape changes.
+  useEffect(() => {
+    if (rule.type !== "group") return
+    if (activeRequirementIndex >= rule.children.length) {
+      setActiveRequirementIndex(Math.max(0, rule.children.length - 1))
+    }
+  }, [rule, activeRequirementIndex])
+
+  // Adding an achievement from the catalog. We append it to the active
+  // requirement's OR-group. No-op if at cap or already in this row.
+  const handlePickAchievement = (achievementId: string) => {
+    if (totalSelected >= MAX_SELECTABLE_ACHIEVEMENTS) return
+    if (rule.type !== "group") return
+    if (usedIds.includes(achievementId)) return // global de-dup
+
+    const nextChildren = rule.children.map((child, i) => {
+      if (i !== activeRequirementIndex) return child
+      if (child.type !== "group") return child
+      return {
+        ...child,
+        children: [
+          ...child.children,
+          { type: "achievement" as const, achievementId },
+        ],
+      }
+    })
+    setRule({ ...rule, children: nextChildren })
+
+    // Trigger arrival animation on the new chip.
+    setRecentlyAddedId(achievementId)
+    window.setTimeout(() => setRecentlyAddedId(null), 350)
+
+    // On cramped layouts (mobile, or many requirements), the active row
+    // can be scrolled out of view — scroll it back in so the user sees
+    // the chip arrive.
+    requestAnimationFrame(() => {
+      const pane = builderPaneRef.current
+      if (!pane) return
+      const activeCard = pane.querySelector<HTMLElement>('[aria-current="true"]')
+      if (activeCard) {
+        activeCard.scrollIntoView({ block: "nearest", behavior: "smooth" })
+      }
+    })
+  }
 
   const handleCreate = async () => {
     if (totalSelected < 1) return
     setIsCreating(true)
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    // Flatten the tree into the `requiredAchievements` shape the rest of
-    // the catalog already understands. The nested rule is also kept on the
-    // chat object (as `rule`) so any surface that wants to render the
-    // full expression can do so without re-parsing.
     const selectedIds = collectAchievementIds(rule)
     const firstAch = availableAchievements.find((a) =>
       selectedIds.includes(a.id),
@@ -264,32 +283,42 @@ function CreateChatModal({
   const canAdvanceFromGates = totalSelected >= 1
   const canSubmit = totalSelected >= 1 && !isCreating
 
-  // Step labels for the indicator at the top of the modal. We don't show
-  // "success" in the indicator — it's a terminal screen with its own
-  // visual language (big green check). Keeping the dots mapping separate
-  // from the wizard state keeps the indicator dumb + declarative.
   const STEPS: { id: WizardStep; label: string }[] = [
     { id: "gates",   label: "Who can join" },
     { id: "details", label: "Name & details" },
   ]
   const activeStepIndex = step === "details" ? 1 : 0
 
-  return (
+  // Width animates with step — wide on gates (room for catalog), narrow
+  // on details + success (no catalog). Uses transition-[max-width].
+  const wrapperMaxWidth =
+    step === "gates" ? "max-w-4xl" : "max-w-lg"
+
+  // Portal to body so the modal escapes app-shell's `<main z-10>` stacking
+  // context — otherwise the sidebar (z-40, outside main) ends up on top.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  if (!mounted) return null
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-background/90 backdrop-blur-sm p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isCreating) onClose()
       }}
     >
-      <div className="max-w-lg w-full animate-in fade-in zoom-in duration-300">
-        <div className="bg-card border border-border rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+      <div
+        className={cn(
+          "w-full animate-in fade-in zoom-in-95 duration-300 transition-[max-width] ease-out",
+          wrapperMaxWidth,
+        )}
+      >
+        <div className="bg-card border border-border rounded-2xl flex flex-col overflow-hidden h-[90vh] max-h-[90vh]">
           {step === "success" && createdChat ? (
             // ==================== SUCCESS STEP ====================
-            // Confirmation screen with a direct link into the newly-created
-            // chat. "View chat" is the primary action because it's the
-            // reward for having just set up the gate; "Done" dismisses
-            // back to the catalog.
-            <div className="text-center py-4">
+            <div className="flex flex-col items-center justify-center text-center p-8 flex-1">
               <div className="flex justify-center mb-5">
                 <div className="p-4 rounded-full bg-positive/20 border-2 border-positive/40 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
                   <CheckIcon className="h-10 w-10 text-positive" />
@@ -305,7 +334,7 @@ function CreateChatModal({
                   /chats/{createdChat.slug}
                 </span>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 w-full max-w-xs">
                 <Link href={`/chats/${createdChat.slug}`} className="block">
                   <Button className="w-full">View chat</Button>
                 </Link>
@@ -316,10 +345,8 @@ function CreateChatModal({
             </div>
           ) : (
             <>
-              {/* Header — step-aware title. Subtitle removed per design
-                  feedback; the step indicator below already tells the
-                  user where they are. */}
-              <div className="flex items-center justify-between mb-4">
+              {/* Header (fixed) */}
+              <div className="flex items-center justify-between px-6 pt-6 pb-3">
                 <h2 className="text-xl font-bold text-foreground">
                   {step === "gates" ? "Create chat" : "Name your chat"}
                 </h2>
@@ -334,11 +361,8 @@ function CreateChatModal({
                 </button>
               </div>
 
-              {/* Step indicator — 2 dashes + 2 labels. Active segment is
-                  primary (blue), completed is mint, upcoming is muted.
-                  Gives a cheap "step N of 2" affordance without using
-                  numbered circles. */}
-              <div className="mb-5 flex items-center gap-2">
+              {/* Step indicator (fixed) */}
+              <div className="px-6 pb-4 flex items-center gap-2">
                 {STEPS.map((s, i) => {
                   const isActive = i === activeStepIndex
                   const isComplete = i < activeStepIndex
@@ -356,7 +380,7 @@ function CreateChatModal({
                       />
                       <span
                         className={cn(
-                          "text-[10px] uppercase tracking-wider font-semibold",
+                          "font-mono text-[10px] uppercase tracking-[0.18em] font-semibold",
                           isActive
                             ? "text-primary"
                             : isComplete
@@ -371,148 +395,47 @@ function CreateChatModal({
                 })}
               </div>
 
+              {/* ============ Step 1: gates — two-pane body ============ */}
               {step === "gates" && (
-                <>
-              {/* ============ Rank gate ============
-                  Pick a minimum rank tier + the category it's measured in.
-                  This is the coarse "only top X% of Y people can join"
-                  gate — much faster to configure than an achievement
-                  rule, and is ANDed with the rule builder below.
-                  Plain card — no left-accent, no tinted background. The
-                  colour comes from the per-tier rank pills themselves
-                  (amber / blue / emerald / purple / sky). */}
-              <div className="mb-5 rounded-xl border border-primary/40 bg-primary/5 p-3 shadow-[0_0_18px_-10px_var(--accent-glow)]">
-                <div className="mb-3">
-                  <p className="text-sm font-medium text-foreground">
-                    Minimum rank
-                  </p>
-                </div>
-
-                {/* Rank tier pills — one row, mobile-scrollable.
-                    Each pill uses the tier's signature colour from the
-                    RANK_STYLES map so the rank system reads the same
-                    across profile, stories, summary card, and here. */}
-                <div className="flex flex-wrap gap-1.5 mb-4" role="radiogroup" aria-label="Minimum rank tier">
-                  <button
-                    onClick={() => setMinRank(null)}
-                    role="radio"
-                    aria-checked={minRank === null}
-                    className={cn(
-                      "px-3 py-1 rounded-full text-xs font-medium border transition-colors",
-                      minRank === null
-                        ? "border-foreground/40 bg-foreground/10 text-foreground"
-                        : "border-border bg-muted/30 text-muted-foreground hover:text-foreground",
-                    )}
+                <div
+                  className={cn(
+                    "min-h-0 flex-1 overflow-hidden",
+                    "grid grid-cols-1 grid-rows-[1.4fr_1fr]",
+                    "md:grid-cols-[1.05fr_0.95fr] md:grid-rows-1",
+                  )}
+                >
+                  {/* LEFT pane — rule builder, scrolls inside */}
+                  <div
+                    ref={builderPaneRef}
+                    className="thin-scrollbar overflow-y-auto px-6 pb-4 pt-1 min-h-0"
                   >
-                    Any
-                  </button>
-                  {RANK_TIERS.map((tier) => {
-                    const active = minRank === tier.name
-                    const tierStyle = RANK_TIER_STYLES[tier.name]
-                    return (
-                      <button
-                        key={tier.name}
-                        onClick={() => setMinRank(tier.name)}
-                        role="radio"
-                        aria-checked={active}
-                        title={`Top ${tier.percentile}% — ${tier.description}`}
-                        className={cn(
-                          "px-3 py-1 rounded-full text-xs font-semibold border transition-colors",
-                          active
-                            ? cn(tierStyle.activeBorder, tierStyle.activeBg, tierStyle.color, tierStyle.glow)
-                            : cn("border-border bg-muted/30 hover:bg-muted/40", tierStyle.color),
-                        )}
-                      >
-                        {tier.name}
-                        <span className="ml-1.5 text-[10px] font-normal opacity-70">
-                          top {tier.percentile}%
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {/* Category selector — which rank bucket is this measured
-                    against? Hidden when minRank is "Any" because a floor
-                    of zero doesn't need a category. Each card uses its
-                    own brand colour so the 4 buckets are visually
-                    distinct even when none is selected. */}
-                {minRank !== null && (
-                  <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-                    <p className="text-xs font-medium text-foreground mb-1.5">
-                      In category
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Rank category">
-                      {(
-                        [
-                          { id: "global",  label: "Global REP",       hint: "Total score",       tone: "primary" as const },
-                          { id: "graph",   label: "Social Graph",     hint: "Who follows you",   tone: "accent"  as const },
-                          { id: "social",  label: "Social Activity",  hint: "X signal",          tone: "purple"  as const },
-                          { id: "onchain", label: "Onchain Activity", hint: "Wallet actions",    tone: "amber"   as const },
-                        ] as const
-                      ).map((cat) => {
-                        const active = rankCategory === cat.id
-                        const tone = CATEGORY_TONES[cat.tone]
-                        return (
-                          <button
-                            key={cat.id}
-                            onClick={() => setRankCategory(cat.id)}
-                            role="radio"
-                            aria-checked={active}
-                            className={cn(
-                              "text-left px-3 py-2 rounded-lg text-xs border transition-all",
-                              active
-                                ? cn(tone.activeBorder, tone.activeBg, tone.color, tone.glow)
-                                : cn("border-border bg-muted/30 hover:bg-muted/40 text-foreground"),
-                            )}
-                          >
-                            <p className="font-semibold">{cat.label}</p>
-                            <p className={cn(
-                              "text-[10px] mt-0.5",
-                              active ? "opacity-80" : "text-muted-foreground",
-                            )}>{cat.hint}</p>
-                          </button>
-                        )
-                      })}
-                    </div>
+                    <ChatRuleBuilder
+                      rule={rule}
+                      onChange={setRule}
+                      achievements={availableAchievements}
+                      maxTotal={MAX_SELECTABLE_ACHIEVEMENTS}
+                      activeIndex={activeRequirementIndex}
+                      onActivate={setActiveRequirementIndex}
+                      recentlyAddedAchievementId={recentlyAddedId}
+                    />
                   </div>
-                )}
-              </div>
 
-              {/* ============ Rule builder ============
-                  Lets the creator compose nested AND/OR expressions, e.g.
-                  `(Liquid Hands AND Credit Native) OR Diamond PnL`. The
-                  component handles the achievement picker, the group
-                  operator toggles, nesting, the cap, and the live
-                  preview. Plain card so the per-chip colour tints
-                  (blue = onchain, green = social) own the palette. */}
-              <div className="mb-5 rounded-xl border border-primary/40 bg-primary/5 p-3 shadow-[0_0_18px_-10px_var(--accent-glow)]">
-                <ChatRuleBuilder
-                  rule={rule}
-                  onChange={setRule}
-                  achievements={availableAchievements}
-                  maxTotal={MAX_SELECTABLE_ACHIEVEMENTS}
-                />
-              </div>
-
-              {/* Step 1 CTA — "Next" advances to the details step once the
-                  creator has picked at least one achievement. */}
-              <Button
-                className="w-full"
-                onClick={() => setStep("details")}
-                disabled={!canAdvanceFromGates}
-              >
-                {canAdvanceFromGates ? "Next" : "Pick at least one achievement"}
-              </Button>
-                </>
+                  {/* RIGHT pane — achievement catalog, scrolls inside */}
+                  <div className="border-t border-border md:border-t-0 md:border-l bg-muted/[0.02] flex flex-col min-h-0">
+                    <AchievementCatalog
+                      achievements={availableAchievements}
+                      usedIds={usedIds}
+                      onPick={handlePickAchievement}
+                      totalSelected={totalSelected}
+                      maxTotal={MAX_SELECTABLE_ACHIEVEMENTS}
+                    />
+                  </div>
+                </div>
               )}
 
+              {/* ============ Step 2: details ============ */}
               {step === "details" && (
-                <>
-                  {/* ============ Step 2 — Name & description ============
-                      Moved off step 1 per design feedback. Both fields are
-                      optional; if the name is empty we fall back to
-                      `${firstAchievement.name} Room` on submit. */}
+                <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
                   <div className="space-y-3 mb-5">
                     <div>
                       <label className="block text-xs font-medium text-foreground mb-1.5">
@@ -546,9 +469,21 @@ function CreateChatModal({
                       />
                     </div>
                   </div>
+                </div>
+              )}
 
-                  {/* Back / Create buttons — Back is de-emphasised (outline)
-                      and Create is the primary CTA, the actual submit. */}
+              {/* ============ Footer (fixed) ============ */}
+              <div className="border-t border-border px-6 py-4">
+                {step === "gates" && (
+                  <Button
+                    className="w-full"
+                    onClick={() => setStep("details")}
+                    disabled={!canAdvanceFromGates}
+                  >
+                    {canAdvanceFromGates ? "Next" : "Pick at least one achievement"}
+                  </Button>
+                )}
+                {step === "details" && (
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -566,13 +501,14 @@ function CreateChatModal({
                       {isCreating ? "Creating..." : "Create chat"}
                     </Button>
                   </div>
-                </>
-              )}
+                )}
+              </div>
             </>
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
