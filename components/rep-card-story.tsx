@@ -21,10 +21,6 @@
 
 import Image from "next/image"
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import {
-  StoryCardBackground,
-  seedFromString,
-} from "@/components/story-card-background"
 import type { RankTier } from "@/lib/auth-context"
 
 // ---------------------------------------------------------------------------
@@ -179,7 +175,6 @@ export function RepCardStory({
   animate = true,
   className,
 }: RepCardStoryProps) {
-  const seed = seedFromString(`rep-card-${handle}-${rankTier}`)
   const ringClass = rankRingColors[rankTier] ?? "ring-primary"
   const badgeSrc = rankBadges[rankTier] ?? rankBadges.yo
 
@@ -195,10 +190,6 @@ export function RepCardStory({
         .filter(Boolean)
         .join(" ")}
     >
-      {/* Neural-mesh background — same treatment as every other story card,
-          dialled down a touch so the final card feels subtly richer. */}
-      <StoryCardBackground seed={seed} opacity={0.08} />
-
       <div className="relative z-[1] p-6">
         {/* ---- Header row: avatar + handle + card type + mono label ---- */}
         <div className="mb-5 flex items-center justify-between gap-3">

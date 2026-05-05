@@ -5,13 +5,15 @@ import { Share2, Twitter, Download, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface StoryShareActionsProps {
-  /** Stat line, e.g. "448 smart followers". */
-  stat: string
-  /** Memorable tagline / pull quote for the shared post. */
-  tagline: string
+  /** Stat line, e.g. "448 smart followers". Ignored when `shareText` is set. */
+  stat?: string
+  /** Memorable tagline / pull quote. Ignored when `shareText` is set. */
+  tagline?: string
+  /** Full pre-composed share copy. Wins over stat+tagline when present. */
+  shareText?: string
   /** Handle used in the rep.xyz URL tail. */
   handle: string
-  /** Visual variant — inline (full-width button pair) or icon (top-right). */
+  /** Visual variant - inline (full-width button pair) or icon (top-right). */
   variant?: "inline" | "icon"
   /**
    * Story type id (e.g. "smart-followers"). When supplied, the X intent
@@ -33,6 +35,7 @@ interface StoryShareActionsProps {
 export function StoryShareActions({
   stat,
   tagline,
+  shareText,
   handle,
   variant = "inline",
   storyId,
@@ -59,7 +62,7 @@ export function StoryShareActions({
     return () => document.removeEventListener("mousedown", onClick)
   }, [menuOpen])
 
-  const composeText = () => `${stat} — ${tagline}`
+  const composeText = () => shareText ?? `${stat ?? ""} - ${tagline ?? ""}`
 
   /**
    * Build the public share URL for this story. We prefer the current
