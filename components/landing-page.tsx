@@ -109,17 +109,7 @@ export function LandingPage() {
       />
 
       <section className="relative z-10 mx-auto mt-16 max-w-[1200px] px-6 md:mt-28 md:px-12">
-        <span className="inline-flex items-center gap-2 rounded-full border border-line bg-card-bg px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-ok">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ok opacity-75" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-ok" />
-          </span>
-          Open Access
-        </span>
-
-        <div className="mt-6">
-          <Kicker>Verified context · owned by you</Kicker>
-        </div>
+        <Kicker>Verified context · owned by you</Kicker>
 
         <Title className="mt-6 text-[56px] leading-[0.98] tracking-[-0.028em] md:text-[96px] lg:text-[112px] lg:leading-[0.96]">
           Your reputation, <em>verified onchain</em>.
