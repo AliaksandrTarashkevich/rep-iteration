@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   User,
   Award,
@@ -124,6 +124,7 @@ function NavItem({
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const {
     isAuthenticated,
     user,
@@ -242,18 +243,15 @@ export function Sidebar() {
               <Settings className="h-4 w-4" />
             </Link>
           </div>
-        ) : (
+        ) : pathname !== "/" ? (
           <Pill
             variant="accent"
             className="w-full"
-            onClick={() => {
-              const authSection = document.getElementById("auth-section")
-              authSection?.scrollIntoView({ behavior: "smooth" })
-            }}
+            onClick={() => router.push("/#auth-section")}
           >
             Connect
           </Pill>
-        )}
+        ) : null}
       </div>
     </aside>
   )
