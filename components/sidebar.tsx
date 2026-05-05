@@ -51,12 +51,9 @@ const authenticatedNavItems = [
 ]
 
 const guestNavItems = [
-  { label: "Profile", href: "/", icon: User, external: false },
-  { label: "Matches", href: "/matches", icon: Sparkles, external: false },
-  { label: "Leaderboard", href: "/leaderboard", icon: Trophy, external: false },
-  { label: "Chats", href: "/chats", icon: MessageSquare, external: false },
-  { label: "Network", href: "/network", icon: Network, external: false },
   { label: "Manifesto", href: "https://r3p.xyz/manifesto", icon: FileText, external: true },
+  { label: "Chats", href: "/chats", icon: MessageSquare, external: false },
+  { label: "Profile", href: "/", icon: User, external: false },
 ]
 
 const manifestoLink = { label: "Manifesto", href: "https://r3p.xyz/manifesto" }

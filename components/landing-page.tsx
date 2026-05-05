@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { WalletConnectDialog } from "@/components/wallet-connect-dialog"
-import { Wordmark } from "@/components/ui/wordmark"
 import { Kicker, Pill, Title, Num } from "@/components/ui/primitives"
 import { saveConnectedWallet, type ConnectedWallet } from "@/lib/wallet"
 
@@ -108,26 +107,6 @@ export function LandingPage() {
             "radial-gradient(circle, rgba(242,153,51,0.08), transparent 62%)",
         }}
       />
-
-      <header className="relative z-10 flex items-center justify-between px-6 pt-8 md:px-12 md:pt-10">
-        <Wordmark size={26} />
-        <nav className="flex items-center gap-3 font-mono text-[12px] uppercase tracking-[0.24em] text-ink-mute">
-          <a
-            href="https://r3p.xyz/manifesto"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden hover:text-ink md:inline"
-          >
-            Manifesto
-          </a>
-          <a href="#auth-section" className="hidden hover:text-ink md:inline">
-            How it works
-          </a>
-          <Pill variant="accent" size="sm" onClick={handleJoinWithX}>
-            Claim REP
-          </Pill>
-        </nav>
-      </header>
 
       <section className="relative z-10 mx-auto mt-16 max-w-[1200px] px-6 md:mt-28 md:px-12">
         <span className="inline-flex items-center gap-2 rounded-full border border-line bg-card-bg px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-ok">
