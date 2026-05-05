@@ -51,9 +51,9 @@ const authenticatedNavItems = [
 ]
 
 const guestNavItems = [
-  { label: "Manifesto", href: "https://r3p.xyz/manifesto", icon: FileText, external: true },
-  { label: "Chats", href: "/chats", icon: MessageSquare, external: false },
   { label: "Profile", href: "/", icon: User, external: false },
+  { label: "Chats", href: "/chats", icon: MessageSquare, external: false },
+  { label: "Manifesto", href: "https://r3p.xyz/manifesto", icon: FileText, external: true },
 ]
 
 const manifestoLink = { label: "Manifesto", href: "https://r3p.xyz/manifesto" }
