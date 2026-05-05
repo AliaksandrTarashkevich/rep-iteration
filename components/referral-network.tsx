@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { RANK_TIERS, type RankTier } from "@/lib/auth-context"
+import { getAvatarUrl } from "@/lib/avatars"
 
 // Rank tier styling
 const rankStyles: Record<RankTier, { color: string; glow: string }> = {
@@ -59,7 +60,7 @@ const mockReferrals: Referral[] = [
     rep: 2450,
     generation: 1,
     rank: "ꙮ",
-    avatar: "/images/avatars/avatar-1.jpg",
+    avatar: getAvatarUrl("adam.eth"),
     repEarned: 250,
     children: [
       {
@@ -68,7 +69,7 @@ const mockReferrals: Referral[] = [
         rep: 1890,
         generation: 2,
         rank: "yo",
-        avatar: "/images/avatars/avatar-2.jpg",
+        avatar: getAvatarUrl("seth.sol"),
         repEarned: 50,
         children: [
           {
@@ -77,7 +78,7 @@ const mockReferrals: Referral[] = [
             rep: 1120,
             generation: 3,
             rank: "roko",
-            avatar: "/images/avatars/avatar-3.jpg",
+            avatar: getAvatarUrl("enos.base"),
             repEarned: 15,
           },
           {
@@ -86,7 +87,7 @@ const mockReferrals: Referral[] = [
             rep: 890,
             generation: 3,
             rank: "droog",
-            avatar: "/images/avatars/avatar-4.jpg",
+            avatar: getAvatarUrl("kenan"),
             repEarned: 10,
           },
         ],
@@ -97,7 +98,7 @@ const mockReferrals: Referral[] = [
         rep: 670,
         generation: 2,
         rank: "ToT",
-        avatar: "/images/avatars/avatar-5.jpg",
+        avatar: getAvatarUrl("builder"),
         repEarned: 20,
       },
       {
@@ -106,7 +107,7 @@ const mockReferrals: Referral[] = [
         rep: 210,
         generation: 2,
         rank: "cicada",
-        avatar: "/images/avatars/avatar-6.jpg",
+        avatar: getAvatarUrl("newcomer"),
         repEarned: 10,
       },
     ],
@@ -117,7 +118,7 @@ const mockReferrals: Referral[] = [
     rep: 1240,
     generation: 1,
     rank: "yo",
-    avatar: "/images/avatars/avatar-2.jpg",
+    avatar: getAvatarUrl("alice.eth"),
     repEarned: 120,
     children: [
       {
@@ -126,7 +127,7 @@ const mockReferrals: Referral[] = [
         rep: 980,
         generation: 2,
         rank: "roko",
-        avatar: "/images/avatars/avatar-4.jpg",
+        avatar: getAvatarUrl("dev_queen"),
         repEarned: 45,
         children: [
           {
@@ -135,7 +136,7 @@ const mockReferrals: Referral[] = [
             rep: 190,
             generation: 3,
             rank: "pilgrim",
-            avatar: "/images/avatars/avatar-1.jpg",
+            avatar: getAvatarUrl("proto_kid"),
             repEarned: 5,
           },
         ],
@@ -146,7 +147,7 @@ const mockReferrals: Referral[] = [
         rep: 150,
         generation: 2,
         rank: "pilgrim",
-        avatar: "/images/avatars/avatar-6.jpg",
+        avatar: getAvatarUrl("curious_cat"),
         repEarned: 10,
       },
     ],
@@ -157,7 +158,7 @@ const mockReferrals: Referral[] = [
     rep: 890,
     generation: 1,
     rank: "droog",
-    avatar: "/images/avatars/avatar-6.jpg",
+    avatar: getAvatarUrl("maya.sol"),
     repEarned: 85,
   },
   {
@@ -166,7 +167,7 @@ const mockReferrals: Referral[] = [
     rep: 430,
     generation: 1,
     rank: "cicada",
-    avatar: "/images/avatars/avatar-3.jpg",
+    avatar: getAvatarUrl("trader_x"),
     repEarned: 45,
   },
   {
@@ -175,7 +176,7 @@ const mockReferrals: Referral[] = [
     rep: 120,
     generation: 1,
     rank: "pilgrim",
-    avatar: "/images/avatars/avatar-5.jpg",
+    avatar: getAvatarUrl("newbie_1"),
     repEarned: 25,
   },
 ]

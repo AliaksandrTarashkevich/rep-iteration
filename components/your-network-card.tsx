@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown, ChevronUp, Copy, Check, Share2, User, X } from "lucide-react"
+import { getAvatarUrl } from "@/lib/avatars"
 
 // ============================================================================
 // SOCIAL GRAPH — tier list card
@@ -43,9 +44,9 @@ const defaultTiers: Tier[] = [
     people: 98,
     rep: 644,
     topConnectors: [
-      { handle: "adam.eth", avatarUrl: "/images/avatars/avatar-1.jpg", people: 21, rep: 345, ringColor: "ring-amber-400" },
-      { handle: "seth.sol", avatarUrl: "/images/avatars/avatar-2.jpg", people: 15, rep: 120, ringColor: "ring-amber-400" },
-      { handle: "builder",  avatarUrl: "/images/avatars/avatar-3.jpg", people: 10, rep: 56,  ringColor: "ring-sky-400" },
+      { handle: "adam.eth", avatarUrl: getAvatarUrl("adam.eth"), people: 21, rep: 345, ringColor: "ring-amber-400" },
+      { handle: "seth.sol", avatarUrl: getAvatarUrl("seth.sol"), people: 15, rep: 120, ringColor: "ring-amber-400" },
+      { handle: "builder",  avatarUrl: getAvatarUrl("builder"), people: 10, rep: 56,  ringColor: "ring-sky-400" },
     ],
   },
   {
@@ -54,9 +55,9 @@ const defaultTiers: Tier[] = [
     people: 324,
     rep: 104,
     topConnectors: [
-      { handle: "nouns.fren",  avatarUrl: "/images/avatars/avatar-4.jpg", people: 64, rep: 41, ringColor: "ring-emerald-400" },
-      { handle: "zora.art",    avatarUrl: "/images/avatars/avatar-5.jpg", people: 52, rep: 33, ringColor: "ring-sky-400" },
-      { handle: "dao.maxi",    avatarUrl: "/images/avatars/avatar-6.jpg", people: 41, rep: 18, ringColor: "ring-purple-400" },
+      { handle: "nouns.fren",  avatarUrl: getAvatarUrl("nouns.fren"), people: 64, rep: 41, ringColor: "ring-emerald-400" },
+      { handle: "zora.art",    avatarUrl: getAvatarUrl("zora.art"), people: 52, rep: 33, ringColor: "ring-sky-400" },
+      { handle: "dao.maxi",    avatarUrl: getAvatarUrl("dao.maxi"), people: 41, rep: 18, ringColor: "ring-purple-400" },
     ],
   },
   {
@@ -65,9 +66,9 @@ const defaultTiers: Tier[] = [
     people: 151,
     rep: 78,
     topConnectors: [
-      { handle: "farcaster.w", avatarUrl: "/images/avatars/avatar-2.jpg", people: 38, rep: 26, ringColor: "ring-sky-400" },
-      { handle: "alpha.seek",  avatarUrl: "/images/avatars/avatar-4.jpg", people: 29, rep: 19, ringColor: "ring-emerald-400" },
-      { handle: "cypher.0x",   avatarUrl: "/images/avatars/avatar-1.jpg", people: 22, rep: 14, ringColor: "ring-muted-foreground" },
+      { handle: "farcaster.w", avatarUrl: getAvatarUrl("farcaster.w"), people: 38, rep: 26, ringColor: "ring-sky-400" },
+      { handle: "alpha.seek",  avatarUrl: getAvatarUrl("alpha.seek"), people: 29, rep: 19, ringColor: "ring-emerald-400" },
+      { handle: "cypher.0x",   avatarUrl: getAvatarUrl("cypher.0x"), people: 22, rep: 14, ringColor: "ring-muted-foreground" },
     ],
   },
   {
@@ -76,9 +77,9 @@ const defaultTiers: Tier[] = [
     people: 61,
     rep: 45,
     topConnectors: [
-      { handle: "lurker.eth",  avatarUrl: "/images/avatars/avatar-3.jpg", people: 14, rep: 18, ringColor: "ring-muted-foreground" },
-      { handle: "ghost.sol",   avatarUrl: "/images/avatars/avatar-5.jpg", people: 11, rep: 13, ringColor: "ring-muted-foreground" },
-      { handle: "anon.base",   avatarUrl: "/images/avatars/avatar-6.jpg", people: 8,  rep: 8,  ringColor: "ring-muted-foreground" },
+      { handle: "lurker.eth",  avatarUrl: getAvatarUrl("lurker.eth"), people: 14, rep: 18, ringColor: "ring-muted-foreground" },
+      { handle: "ghost.sol",   avatarUrl: getAvatarUrl("ghost.sol"), people: 11, rep: 13, ringColor: "ring-muted-foreground" },
+      { handle: "anon.base",   avatarUrl: getAvatarUrl("anon.base"), people: 8,  rep: 8,  ringColor: "ring-muted-foreground" },
     ],
   },
 ]

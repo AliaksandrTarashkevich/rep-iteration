@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { getPoolAvatarByIndex } from "@/lib/avatars"
 import { ChatsUnlockedOverlay } from "@/components/chats-unlocked-overlay"
 import { 
   User, 
@@ -485,7 +486,7 @@ export default function ProfilePage() {
             {accessibleChats.slice(0, 3).map((chat, chatIdx) => {
               const avatarSeed = (chat.id.charCodeAt(0) || 0) + chatIdx
               const memberAvatars = Array.from({ length: 4 }, (_, i) =>
-                `/images/avatars/avatar-${((avatarSeed + i) % 6) + 1}.jpg`
+                getPoolAvatarByIndex(avatarSeed + i)
               )
               const hasUnread = chat.unread > 0
 

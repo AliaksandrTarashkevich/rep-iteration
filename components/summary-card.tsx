@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Share2, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import { getAvatarUrl } from "@/lib/avatars"
 
 // ============================================================================
 // TYPES
@@ -402,7 +403,7 @@ export function SummaryCard({
 
 export const MOCK_SUMMARY_DATA: SummaryCardData = {
   handle: "tradoor",
-  avatarUrl: "/images/avatars/avatar-1.jpg",
+  avatarUrl: getAvatarUrl("tradoor"),
   repScore: 847,
   overallRank: 3840,
   totalUsers: 128000,
@@ -411,9 +412,9 @@ export const MOCK_SUMMARY_DATA: SummaryCardData = {
   hasWallet: false,
   rankTier: "yo",
   notableFollowers: [
-    { handle: "@vitalik", avatarUrl: "/images/avatars/avatar-2.jpg" },
-    { handle: "@cobie", avatarUrl: "/images/avatars/avatar-3.jpg" },
-    { handle: "@punk6529", avatarUrl: "/images/avatars/avatar-4.jpg" },
+    { handle: "@vitalik", avatarUrl: getAvatarUrl("@vitalik") },
+    { handle: "@cobie", avatarUrl: getAvatarUrl("@cobie") },
+    { handle: "@punk6529", avatarUrl: getAvatarUrl("@punk6529") },
   ],
   highlights: [
     { type: "twitter_percentile", label: "Crypto Twitter", value: "Top 3%", percentile: 97 },
@@ -425,7 +426,7 @@ export const MOCK_SUMMARY_DATA: SummaryCardData = {
 
 export const MOCK_FULL_CARD_DATA: SummaryCardData = {
   handle: "degenwhale",
-  avatarUrl: "/images/avatars/avatar-5.jpg",
+  avatarUrl: getAvatarUrl("degenwhale"),
   repScore: 1247,
   overallRank: 847,
   totalUsers: 128000,
@@ -434,9 +435,9 @@ export const MOCK_FULL_CARD_DATA: SummaryCardData = {
   hasWallet: true,
   rankTier: "ꙮ",
   notableFollowers: [
-    { handle: "@vitalik", avatarUrl: "/images/avatars/avatar-2.jpg" },
-    { handle: "@cobie", avatarUrl: "/images/avatars/avatar-3.jpg" },
-    { handle: "@tetranode", avatarUrl: "/images/avatars/avatar-4.jpg" },
+    { handle: "@vitalik", avatarUrl: getAvatarUrl("@vitalik") },
+    { handle: "@cobie", avatarUrl: getAvatarUrl("@cobie") },
+    { handle: "@tetranode", avatarUrl: getAvatarUrl("@tetranode") },
   ],
   highlights: [
     { type: "twitter_percentile", label: "Crypto Twitter", value: "Top 1%", percentile: 99 },
@@ -453,7 +454,7 @@ export const MOCK_FULL_CARD_DATA: SummaryCardData = {
 
 export const MOCK_ONCHAIN_CARD_DATA: SummaryCardData = {
   handle: "0x1a2b...3c4d",
-  avatarUrl: "/images/avatars/avatar-6.jpg",
+  avatarUrl: getAvatarUrl("0x1a2b...3c4d"),
   repScore: 623,
   overallRank: 12400,
   totalUsers: 128000,

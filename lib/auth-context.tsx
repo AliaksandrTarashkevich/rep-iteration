@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, useMemo, useCallback, type ReactNode } from "react"
+import { getAvatarUrl } from "@/lib/avatars"
 
 // LocalStorage keys for persisting lightweight onboarding/session state.
 // NOTE: This is a mock auth layer — in production these would live server-side.
@@ -150,7 +151,7 @@ interface AuthContextType {
 const mockUser: User = {
   handle: "nord_monkey",
   displayName: "Nord Monkey",
-  avatarUrl: "/images/avatars/avatar-1.jpg",
+  avatarUrl: getAvatarUrl("nord_monkey"),
   walletAddress: "0x1a2b...9f0e",
   totalRep: 895,
   rank: 238,

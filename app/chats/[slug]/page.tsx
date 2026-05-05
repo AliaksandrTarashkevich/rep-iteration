@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ArrowRight, X, Sparkles, Lock } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { getAvatarUrl } from "@/lib/avatars"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
@@ -128,7 +129,7 @@ const mockChatDetail: ChatDetail = {
   creator: {
     handle: "pmwhale",
     displayName: "PM Whale",
-    avatarUrl: "/images/avatars/avatar-2.jpg",
+    avatarUrl: getAvatarUrl("pmwhale"),
     followers: 12400,
   },
 
@@ -137,7 +138,7 @@ const mockChatDetail: ChatDetail = {
       id: "1",
       handle: "traderpro",
       displayName: "TraderPro",
-      avatarUrl: "/images/avatars/avatar-1.jpg",
+      avatarUrl: getAvatarUrl("traderpro"),
       rep: 4500,
       topAchievement: { name: "Top Trader", icon: "trending" },
     },
@@ -145,7 +146,7 @@ const mockChatDetail: ChatDetail = {
       id: "2",
       handle: "alphamaster",
       displayName: "Alpha Master",
-      avatarUrl: "/images/avatars/avatar-3.jpg",
+      avatarUrl: getAvatarUrl("alphamaster"),
       rep: 3800,
       topAchievement: { name: "Alpha Caller", icon: "star" },
     },
@@ -153,7 +154,7 @@ const mockChatDetail: ChatDetail = {
       id: "3",
       handle: "predictionking",
       displayName: "Prediction King",
-      avatarUrl: "/images/avatars/avatar-4.jpg",
+      avatarUrl: getAvatarUrl("predictionking"),
       rep: 3200,
       topAchievement: { name: "Oracle", icon: "compass" },
     },
@@ -161,7 +162,7 @@ const mockChatDetail: ChatDetail = {
       id: "4",
       handle: "marketmaven",
       displayName: "Market Maven",
-      avatarUrl: "/images/avatars/avatar-5.jpg",
+      avatarUrl: getAvatarUrl("marketmaven"),
       rep: 2900,
       topAchievement: { name: "Macro Sage", icon: "layers" },
     },
@@ -169,7 +170,7 @@ const mockChatDetail: ChatDetail = {
       id: "5",
       handle: "oddshunter",
       displayName: "Odds Hunter",
-      avatarUrl: "/images/avatars/avatar-6.jpg",
+      avatarUrl: getAvatarUrl("oddshunter"),
       rep: 2700,
       topAchievement: { name: "Sharp", icon: "target" },
     },

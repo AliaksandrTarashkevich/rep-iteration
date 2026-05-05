@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { getAvatarUrl } from "@/lib/avatars"
 import {
   Wallet,
   ChevronRight,
@@ -102,7 +103,7 @@ const COMMUNITY_COLORS: Record<string, { bg: string; text: string; bar: string }
 const MOCK_DATA = {
   user: {
     handle: "tradoor",
-    avatarUrl: "/images/avatars/avatar-1.jpg",
+    avatarUrl: getAvatarUrl("tradoor"),
     rankTier: "yo" as RankTier,
   },
   smartFollowers: {
@@ -112,17 +113,17 @@ const MOCK_DATA = {
     influencers: 312,
   },
   notableFollowers: [
-    { handle: "@vitalik", score: 94.2, avatarUrl: "/images/avatars/avatar-2.jpg" },
-    { handle: "@cobie", score: 87.5, avatarUrl: "/images/avatars/avatar-3.jpg" },
-    { handle: "@punk6529", score: 82.1, avatarUrl: "/images/avatars/avatar-4.jpg" },
-    { handle: "@tetranode", score: 78.9, avatarUrl: "/images/avatars/avatar-5.jpg" },
-    { handle: "@DefiIgnas", score: 71.3, avatarUrl: "/images/avatars/avatar-6.jpg" },
+    { handle: "@vitalik", score: 94.2, avatarUrl: getAvatarUrl("@vitalik") },
+    { handle: "@cobie", score: 87.5, avatarUrl: getAvatarUrl("@cobie") },
+    { handle: "@punk6529", score: 82.1, avatarUrl: getAvatarUrl("@punk6529") },
+    { handle: "@tetranode", score: 78.9, avatarUrl: getAvatarUrl("@tetranode") },
+    { handle: "@DefiIgnas", score: 71.3, avatarUrl: getAvatarUrl("@DefiIgnas") },
   ],
   notableScore: 38.0,
   innerCircle: [
-    { handle: "@hsaka", score: 98, avatarUrl: "/images/avatars/avatar-3.jpg" },
-    { handle: "@loomdart", score: 94, avatarUrl: "/images/avatars/avatar-4.jpg" },
-    { handle: "@blknoiz06", score: 91, avatarUrl: "/images/avatars/avatar-5.jpg" },
+    { handle: "@hsaka", score: 98, avatarUrl: getAvatarUrl("@hsaka") },
+    { handle: "@loomdart", score: 94, avatarUrl: getAvatarUrl("@loomdart") },
+    { handle: "@blknoiz06", score: 91, avatarUrl: getAvatarUrl("@blknoiz06") },
   ],
   communities: [
     { name: "DeFi", percentage: 34 },
@@ -162,7 +163,7 @@ const MOCK_DATA = {
   },
   summary: {
     handle: "tradoor",
-    avatarUrl: "/images/avatars/avatar-1.jpg",
+    avatarUrl: getAvatarUrl("tradoor"),
     repScore: 847,
     signal: 448,
     communities: 5,

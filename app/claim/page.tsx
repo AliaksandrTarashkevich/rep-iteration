@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { MOCK_SUMMARY_DATA, MOCK_FULL_CARD_DATA, type SummaryCardData } from "@/components/summary-card"
 import { RepCardStory } from "@/components/rep-card-story"
 import { useAuth } from "@/lib/auth-context"
+import { getAvatarUrl } from "@/lib/avatars"
 
 // ---------------------------------------------------------------------------
 // Adapter: map the legacy SummaryCardData shape to the new RepCardStory
@@ -291,7 +292,7 @@ function ClaimContent() {
           >
             <RepCardStory
               handle={cardData.handle}
-              avatarUrl={cardData.avatarUrl ?? "/images/avatars/avatar-1.jpg"}
+              avatarUrl={cardData.avatarUrl ?? getAvatarUrl(cardData.handle)}
               repScore={cardData.repScore}
               overallRank={cardData.overallRank}
               totalUsers={cardData.totalUsers}

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { useAuth, RANK_TIERS, type RankTier } from "@/lib/auth-context"
+import { getAvatarUrl, getPoolAvatarByIndex } from "@/lib/avatars"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -593,16 +594,14 @@ function getTopMemberAvatars(chatId: string): string[] {
   for (let i = 0; i < chatId.length; i++) seed = (seed + chatId.charCodeAt(i)) % 97
   return Array.from(
     { length: TOP_MEMBER_COUNT },
-    (_, i) => `/images/avatars/avatar-${((seed + i) % 6) + 1}.jpg`
+    (_, i) => getPoolAvatarByIndex(seed + i)
   )
 }
 
-// Deterministic avatar for a creator handle — lets us show a real image
-// instead of a letter bubble, consistent per creator.
+// Deterministic avatar for a creator handle — real X avatar when known,
+// otherwise hashes into the pool (handled inside getAvatarUrl).
 function getCreatorAvatar(handle: string): string {
-  let seed = 0
-  for (let i = 0; i < handle.length; i++) seed = (seed + handle.charCodeAt(i) * 13) % 997
-  return `/images/avatars/avatar-${(seed % 6) + 1}.jpg`
+  return getAvatarUrl(handle)
 }
 
 // Simple avg/total REP derived from the chat's size + power, kept stable
