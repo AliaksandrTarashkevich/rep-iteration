@@ -2,9 +2,6 @@
 
 import { useMemo, useState } from "react"
 import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
   User,
   Network,
   Activity,
@@ -61,13 +58,6 @@ interface LeaderboardUser {
   socialGraphScore: number
   onchainScore: number
   socialScore: number
-  // Trend per category
-  trends: {
-    total: { dir: "up" | "down" | "stable"; amount?: number }
-    socialGraph: { dir: "up" | "down" | "stable"; amount?: number }
-    onchain: { dir: "up" | "down" | "stable"; amount?: number }
-    social: { dir: "up" | "down" | "stable"; amount?: number }
-  }
   // Highlight stats per tab — the "why REP matters" context
   graphPnl: number       // Social Graph tab
   onchainPnl: number     // Activity Onchain tab
@@ -97,84 +87,64 @@ const getRankTier = (rank: number): LeaderboardUser["rankTier"] => {
 const mockUsers: LeaderboardUser[] = [
   { handle: "vitalik", displayName: "Vitalik", avatarUrl: getAvatar(1), rankTier: "ꙮ",
     totalRep: 15847, socialGraphScore: 14200, onchainScore: 12500, socialScore: 15500,
-    graphPnl: 245000, onchainPnl: 892000, smartFollowers: 1847,
-    trends: { total: { dir: "stable" }, socialGraph: { dir: "up", amount: 1 }, onchain: { dir: "stable" }, social: { dir: "stable" } } },
+    graphPnl: 245000, onchainPnl: 892000, smartFollowers: 1847 },
   { handle: "cobie", displayName: "Cobie", avatarUrl: getAvatar(2), rankTier: "ꙮ",
     totalRep: 14203, socialGraphScore: 13800, onchainScore: 8900, socialScore: 14800,
-    graphPnl: 187000, onchainPnl: 534000, smartFollowers: 1623,
-    trends: { total: { dir: "up", amount: 2 }, socialGraph: { dir: "up", amount: 3 }, onchain: { dir: "up", amount: 1 }, social: { dir: "up", amount: 5 } } },
+    graphPnl: 187000, onchainPnl: 534000, smartFollowers: 1623 },
   { handle: "punk6529", displayName: "punk6529", avatarUrl: getAvatar(3), rankTier: "ꙮ",
     totalRep: 13876, socialGraphScore: 12900, onchainScore: 13200, socialScore: 13100,
-    graphPnl: 156000, onchainPnl: 1240000, smartFollowers: 1489,
-    trends: { total: { dir: "down", amount: 1 }, socialGraph: { dir: "down", amount: 2 }, onchain: { dir: "stable" }, social: { dir: "down", amount: 1 } } },
+    graphPnl: 156000, onchainPnl: 1240000, smartFollowers: 1489 },
   { handle: "hsaka", displayName: "Hsaka", avatarUrl: getAvatar(4), rankTier: "yo",
     totalRep: 12541, socialGraphScore: 10200, onchainScore: 11800, socialScore: 11700,
-    graphPnl: 98000, onchainPnl: 467000, smartFollowers: 987,
-    trends: { total: { dir: "up", amount: 5 }, socialGraph: { dir: "up", amount: 4 }, onchain: { dir: "up", amount: 6 }, social: { dir: "up", amount: 3 } } },
+    graphPnl: 98000, onchainPnl: 467000, smartFollowers: 987 },
   { handle: "degenwhale", displayName: "Degen Whale", avatarUrl: getAvatar(5), rankTier: "yo",
     totalRep: 11247, socialGraphScore: 9400, onchainScore: 12100, socialScore: 8900,
-    graphPnl: 67000, onchainPnl: 1890000, smartFollowers: 654,
-    trends: { total: { dir: "up", amount: 3 }, socialGraph: { dir: "stable" }, onchain: { dir: "up", amount: 8 }, social: { dir: "down", amount: 1 } } },
+    graphPnl: 67000, onchainPnl: 1890000, smartFollowers: 654 },
   { handle: "cryptonative", displayName: "Crypto Native", avatarUrl: getAvatar(6), rankTier: "yo",
     totalRep: 10890, socialGraphScore: 11300, onchainScore: 7800, socialScore: 10400,
-    graphPnl: 134000, onchainPnl: 234000, smartFollowers: 876,
-    trends: { total: { dir: "stable" }, socialGraph: { dir: "up", amount: 2 }, onchain: { dir: "down", amount: 3 }, social: { dir: "stable" } } },
+    graphPnl: 134000, onchainPnl: 234000, smartFollowers: 876 },
   { handle: "defichad", displayName: "DeFi Chad", avatarUrl: getAvatar(1), rankTier: "yo",
     totalRep: 9654, socialGraphScore: 7100, onchainScore: 11400, socialScore: 7900,
-    graphPnl: 45000, onchainPnl: 678000, smartFollowers: 543,
-    trends: { total: { dir: "down", amount: 2 }, socialGraph: { dir: "down", amount: 1 }, onchain: { dir: "up", amount: 4 }, social: { dir: "down", amount: 3 } } },
+    graphPnl: 45000, onchainPnl: 678000, smartFollowers: 543 },
   { handle: "nftmaxi", displayName: "NFT Maxi", avatarUrl: getAvatar(2), rankTier: "yo",
     totalRep: 8432, socialGraphScore: 8800, onchainScore: 6900, socialScore: 9800,
-    graphPnl: 89000, onchainPnl: 123000, smartFollowers: 765,
-    trends: { total: { dir: "up", amount: 8 }, socialGraph: { dir: "up", amount: 6 }, onchain: { dir: "up", amount: 2 }, social: { dir: "up", amount: 12 } } },
+    graphPnl: 89000, onchainPnl: 123000, smartFollowers: 765 },
   { handle: "tradoor_pro", displayName: "Tradoor Pro", avatarUrl: getAvatar(3), rankTier: "yo",
     totalRep: 7891, socialGraphScore: 6500, onchainScore: 9200, socialScore: 6400,
-    graphPnl: 34000, onchainPnl: 456000, smartFollowers: 432,
-    trends: { total: { dir: "stable" }, socialGraph: { dir: "down", amount: 1 }, onchain: { dir: "up", amount: 3 }, social: { dir: "stable" } } },
+    graphPnl: 34000, onchainPnl: 456000, smartFollowers: 432 },
   { handle: "airdrop_hunter", displayName: "Airdrop Hunter", avatarUrl: getAvatar(4), rankTier: "yo",
     totalRep: 6543, socialGraphScore: 5400, onchainScore: 8100, socialScore: 5200,
-    graphPnl: 23000, onchainPnl: 345000, smartFollowers: 321,
-    trends: { total: { dir: "up", amount: 12 }, socialGraph: { dir: "up", amount: 5 }, onchain: { dir: "up", amount: 15 }, social: { dir: "up", amount: 4 } } },
+    graphPnl: 23000, onchainPnl: 345000, smartFollowers: 321 },
   { handle: "0xsomething", displayName: "0xSomething", avatarUrl: getAvatar(5), rankTier: "ToT",
     totalRep: 5987, socialGraphScore: 6100, onchainScore: 5400, socialScore: 5900,
-    graphPnl: 56000, onchainPnl: 189000, smartFollowers: 456,
-    trends: { total: { dir: "down", amount: 3 }, socialGraph: { dir: "up", amount: 2 }, onchain: { dir: "down", amount: 4 }, social: { dir: "up", amount: 1 } } },
+    graphPnl: 56000, onchainPnl: 189000, smartFollowers: 456 },
   { handle: "zora_fan", displayName: "Zora Fan", avatarUrl: getAvatar(6), rankTier: "ToT",
     totalRep: 5421, socialGraphScore: 5900, onchainScore: 4100, socialScore: 6200,
-    graphPnl: 67000, onchainPnl: 78000, smartFollowers: 534,
-    trends: { total: { dir: "up", amount: 9 }, socialGraph: { dir: "up", amount: 7 }, onchain: { dir: "up", amount: 1 }, social: { dir: "up", amount: 11 } } },
+    graphPnl: 67000, onchainPnl: 78000, smartFollowers: 534 },
   { handle: "farcaster_og", displayName: "Farcaster OG", avatarUrl: getAvatar(1), rankTier: "ToT",
     totalRep: 4987, socialGraphScore: 5300, onchainScore: 3200, socialScore: 5800,
-    graphPnl: 45000, onchainPnl: 56000, smartFollowers: 489,
-    trends: { total: { dir: "stable" }, socialGraph: { dir: "up", amount: 3 }, onchain: { dir: "stable" }, social: { dir: "up", amount: 2 } } },
+    graphPnl: 45000, onchainPnl: 56000, smartFollowers: 489 },
   { handle: "sol_dev", displayName: "Sol Dev", avatarUrl: getAvatar(2), rankTier: "ToT",
     totalRep: 4532, socialGraphScore: 3900, onchainScore: 5200, socialScore: 3800,
-    graphPnl: 23000, onchainPnl: 234000, smartFollowers: 287,
-    trends: { total: { dir: "up", amount: 4 }, socialGraph: { dir: "stable" }, onchain: { dir: "up", amount: 7 }, social: { dir: "stable" } } },
+    graphPnl: 23000, onchainPnl: 234000, smartFollowers: 287 },
   { handle: "nade", displayName: "nade", avatarUrl: getAvatar(3), rankTier: "ToT",
     totalRep: 4198, socialGraphScore: 4500, onchainScore: 3400, socialScore: 4600,
-    graphPnl: 34000, onchainPnl: 67000, smartFollowers: 367,
-    trends: { total: { dir: "up", amount: 2 }, socialGraph: { dir: "up", amount: 1 }, onchain: { dir: "down", amount: 2 }, social: { dir: "up", amount: 3 } } },
+    graphPnl: 34000, onchainPnl: 67000, smartFollowers: 367 },
   { handle: "base_builder", displayName: "Base Builder", avatarUrl: getAvatar(4), rankTier: "ToT",
     totalRep: 3876, socialGraphScore: 3300, onchainScore: 4200, socialScore: 3100,
-    graphPnl: 18000, onchainPnl: 145000, smartFollowers: 234,
-    trends: { total: { dir: "up", amount: 18 }, socialGraph: { dir: "up", amount: 12 }, onchain: { dir: "up", amount: 22 }, social: { dir: "up", amount: 8 } } },
+    graphPnl: 18000, onchainPnl: 145000, smartFollowers: 234 },
   { handle: "memecoin_king", displayName: "Memecoin King", avatarUrl: getAvatar(5), rankTier: "ToT",
     totalRep: 3542, socialGraphScore: 2800, onchainScore: 4500, socialScore: 2900,
-    graphPnl: 12000, onchainPnl: 289000, smartFollowers: 198,
-    trends: { total: { dir: "down", amount: 5 }, socialGraph: { dir: "down", amount: 3 }, onchain: { dir: "up", amount: 2 }, social: { dir: "down", amount: 6 } } },
+    graphPnl: 12000, onchainPnl: 289000, smartFollowers: 198 },
   { handle: "yield_farmer", displayName: "Yield Farmer", avatarUrl: getAvatar(6), rankTier: "ToT",
     totalRep: 3287, socialGraphScore: 2600, onchainScore: 4100, socialScore: 2500,
-    graphPnl: 9000, onchainPnl: 178000, smartFollowers: 167,
-    trends: { total: { dir: "stable" }, socialGraph: { dir: "down", amount: 1 }, onchain: { dir: "up", amount: 4 }, social: { dir: "stable" } } },
+    graphPnl: 9000, onchainPnl: 178000, smartFollowers: 167 },
   { handle: "eth_denver", displayName: "ETH Denver", avatarUrl: getAvatar(1), rankTier: "ToT",
     totalRep: 3024, socialGraphScore: 3200, onchainScore: 2400, socialScore: 3400,
-    graphPnl: 15000, onchainPnl: 34000, smartFollowers: 256,
-    trends: { total: { dir: "up", amount: 1 }, socialGraph: { dir: "up", amount: 4 }, onchain: { dir: "stable" }, social: { dir: "up", amount: 2 } } },
+    graphPnl: 15000, onchainPnl: 34000, smartFollowers: 256 },
   { handle: "onchain_pepe", displayName: "Onchain Pepe", avatarUrl: getAvatar(2), rankTier: "ToT",
     totalRep: 2798, socialGraphScore: 2100, onchainScore: 3500, socialScore: 2200,
-    graphPnl: 8000, onchainPnl: 123000, smartFollowers: 145,
-    trends: { total: { dir: "up", amount: 6 }, socialGraph: { dir: "up", amount: 2 }, onchain: { dir: "up", amount: 9 }, social: { dir: "up", amount: 3 } } },
+    graphPnl: 8000, onchainPnl: 123000, smartFollowers: 145 },
 
   // Current user — the user has a strong social graph (near the top of
   // that category) but is middling overall, so they rank #5 on the
@@ -182,7 +152,6 @@ const mockUsers: LeaderboardUser[] = [
   { handle: "nord_monkey", displayName: "Nord Monkey", avatarUrl: "/images/avatars/avatar-1.jpg", rankTier: "cicada",
     totalRep: 895, socialGraphScore: 10800, onchainScore: 1240, socialScore: 560,
     graphPnl: 12430, onchainPnl: 8217, smartFollowers: 342,
-    trends: { total: { dir: "up", amount: 15 }, socialGraph: { dir: "up", amount: 8 }, onchain: { dir: "up", amount: 22 }, social: { dir: "up", amount: 6 } },
     fixedRank: 217, isCurrentUser: true },
 ]
 
@@ -192,18 +161,6 @@ function scoreFor(user: LeaderboardUser, tab: MainTab, sub: ActivitySubTab): num
     case "total":        return user.totalRep
     case "social-graph": return user.socialGraphScore
     case "activity":     return sub === "onchain" ? user.onchainScore : user.socialScore
-  }
-}
-
-function trendFor(
-  user: LeaderboardUser,
-  tab: MainTab,
-  sub: ActivitySubTab
-): { dir: "up" | "down" | "stable"; amount?: number } {
-  switch (tab) {
-    case "total":        return user.trends.total
-    case "social-graph": return user.trends.socialGraph
-    case "activity":     return sub === "onchain" ? user.trends.onchain : user.trends.social
   }
 }
 
@@ -236,31 +193,10 @@ const totalUsers = 1256 // mock total
 
 // ---- Mock "your stats" for the hero banner (now computed from actual data) --
 const myStats = {
-  total:       { rank: userRanks.total, totalUsers, trend: "up" as const, repScore: 895, repMax: 1200, nextTier: "Top 200" },
-  socialGraph: { rank: userRanks.socialGraph, totalUsers, trend: "up" as const, repScore: 895, repMax: 1200, nextTier: "Top 3" },
-  onchain:     { rank: userRanks.onchain, totalUsers, trend: "down" as const, repScore: 895, repMax: 1200, nextTier: "Top 50" },
-  social:      { rank: userRanks.social, totalUsers, trend: "down" as const, repScore: 895, repMax: 1200, nextTier: "Top 100" },
-}
-
-// ---- Small trend arrow for the hero banner ---------------------------------
-function HeroTrendArrow({ dir }: { dir: "up" | "down" | "stable" }) {
-  if (dir === "up") {
-    return (
-      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" className="inline-block ml-1.5">
-        <path d="M2 12L7 7L10 9L18 2" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M13 2H18V7" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    )
-  }
-  if (dir === "down") {
-    return (
-      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" className="inline-block ml-1.5">
-        <path d="M2 2L7 7L10 5L18 12" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M13 12H18V7" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    )
-  }
-  return <Minus className="h-3.5 w-3.5 text-muted-foreground inline-block ml-1.5" />
+  total:       { rank: userRanks.total, totalUsers, repScore: 895, repMax: 1200, nextTier: "Top 200" },
+  socialGraph: { rank: userRanks.socialGraph, totalUsers, repScore: 895, repMax: 1200, nextTier: "Top 3" },
+  onchain:     { rank: userRanks.onchain, totalUsers, repScore: 895, repMax: 1200, nextTier: "Top 50" },
+  social:      { rank: userRanks.social, totalUsers, repScore: 895, repMax: 1200, nextTier: "Top 100" },
 }
 
 function getMyStatsKey(tab: MainTab, sub: ActivitySubTab): keyof typeof myStats {
@@ -326,7 +262,6 @@ function LeaderboardHeroBanner({
                 <span className="text-muted-foreground text-xs font-mono ml-0.5">
                   /{col.totalUsers}
                 </span>
-                <HeroTrendArrow dir={col.trend} />
               </div>
             </div>
           )
@@ -355,30 +290,6 @@ function LeaderboardHeroBanner({
       </div>
     </div>
   )
-}
-
-function TrendIndicator({
-  trend,
-}: {
-  trend: { dir: "up" | "down" | "stable"; amount?: number }
-}) {
-  if (trend.dir === "up") {
-    return (
-      <div className="flex items-center gap-1 text-positive text-xs">
-        <TrendingUp className="h-3.5 w-3.5" />
-        {trend.amount !== undefined && <span>+{trend.amount}</span>}
-      </div>
-    )
-  }
-  if (trend.dir === "down") {
-    return (
-      <div className="flex items-center gap-1 text-warning text-xs">
-        <TrendingDown className="h-3.5 w-3.5" />
-        {trend.amount !== undefined && <span>-{trend.amount}</span>}
-      </div>
-    )
-  }
-  return <Minus className="h-3.5 w-3.5 text-muted-foreground" />
 }
 
 // Helper to format currency with K/M suffix
@@ -415,7 +326,6 @@ function LeaderboardRow({
   user,
   rank,
   score,
-  trend,
   isCurrentUser,
   tab,
   activitySub,
@@ -423,7 +333,6 @@ function LeaderboardRow({
   user: LeaderboardUser
   rank: number
   score: number
-  trend: { dir: "up" | "down" | "stable"; amount?: number }
   isCurrentUser: boolean
   tab: MainTab
   activitySub: ActivitySubTab
@@ -525,10 +434,6 @@ function LeaderboardRow({
         >
           {score.toLocaleString()}
         </p>
-      </div>
-
-      <div className="w-10 md:w-12 flex justify-end flex-shrink-0">
-        <TrendIndicator trend={trend} />
       </div>
     </div>
   )
@@ -660,7 +565,6 @@ export default function LeaderboardPage() {
             </div>
           )}
           <div className="w-14 md:w-16 text-right">{scoreLabel}</div>
-          <div className="w-10 md:w-12 text-right">7d</div>
         </div>
 
         <div className="divide-y divide-border">
@@ -670,7 +574,6 @@ export default function LeaderboardPage() {
               user={r.user}
               rank={r.rank}
               score={scoreFor(r.user, mainTab, activitySub)}
-              trend={trendFor(r.user, mainTab, activitySub)}
               isCurrentUser={r.user.handle === user.handle}
               tab={mainTab}
               activitySub={activitySub}
@@ -692,7 +595,6 @@ export default function LeaderboardPage() {
                 user={currentUserEntry.user}
                 rank={currentUserEntry.rank}
                 score={scoreFor(currentUserEntry.user, mainTab, activitySub)}
-                trend={trendFor(currentUserEntry.user, mainTab, activitySub)}
                 isCurrentUser
                 tab={mainTab}
                 activitySub={activitySub}
@@ -794,15 +696,6 @@ export default function LeaderboardPage() {
                     </p>
                     <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
                       {scoreLabel}
-                    </p>
-                  </div>
-
-                  <div className="w-10 md:w-12 flex flex-col items-end flex-shrink-0">
-                    <TrendIndicator
-                      trend={trendFor(currentUserEntry.user, mainTab, activitySub)}
-                    />
-                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                      7d
                     </p>
                   </div>
                 </div>
