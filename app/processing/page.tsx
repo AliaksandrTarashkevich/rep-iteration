@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { AlertCircle, Check, Loader2 } from "lucide-react"
 import { Wordmark } from "@/components/ui/wordmark"
 import { Num, MonoCap } from "@/components/ui/primitives"
+import { ConnectionGrowthNetwork } from "@/components/connection-growth-network"
 import { useAuth } from "@/lib/auth-context"
 import { readConnectedWallet } from "@/lib/wallet"
 
@@ -169,22 +170,13 @@ function ProcessingContent() {
       <div className="relative z-10 flex flex-col items-center">
         <Wordmark size={28} />
 
-        <div
-          className="mt-16 flex h-[260px] w-[260px] items-center justify-center rounded-full"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(140,213,254,0.18), transparent 60%)",
-          }}
-        >
-          <div
-            className="relative h-32 w-32 animate-pulse rounded-full border border-accent"
-            style={{
-              boxShadow:
-                "0 0 80px rgba(140,213,254,0.45), inset 0 0 40px rgba(140,213,254,0.2)",
-            }}
-          >
-            <div className="absolute inset-4 rounded-full bg-accent/20" />
-          </div>
+        <div className="mt-12 w-[min(420px,calc(100vw-3rem))]">
+          <ConnectionGrowthNetwork
+            variant={source}
+            activeStep={currentStepIndex}
+            complete={complete}
+            repScore={null}
+          />
         </div>
 
         <div className="mt-12 w-[min(420px,calc(100vw-3rem))]">
