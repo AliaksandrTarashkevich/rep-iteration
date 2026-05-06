@@ -5,11 +5,10 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { getPoolAvatarByIndex } from "@/lib/avatars"
 import { ChatsUnlockedOverlay } from "@/components/chats-unlocked-overlay"
-import { 
-  User, 
-  Copy, 
-  Check, 
-  Share2, 
+import {
+  User,
+  Copy,
+  Share2,
   Play, 
   UserPlus, 
   ChevronRight, 
@@ -43,17 +42,7 @@ import { ConnectedAccounts } from "@/components/connected-accounts"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { PageShell } from "@/components/ui/page-shell"
-import { Tile, Pill, Chip, Num, MonoCap } from "@/components/ui/primitives"
-
-// M1 reference source chips — verifiable real-life context sources
-const SOURCE_CHIPS = [
-  "Apple",
-  "Spotify",
-  "GitHub",
-  "Amex",
-  "Strava",
-  "wallet",
-] as const
+import { Tile, Pill, Num, MonoCap } from "@/components/ui/primitives"
 
 import { RANK_TIERS, type RankTier } from "@/lib/auth-context"
 
@@ -310,9 +299,8 @@ export default function ProfilePage() {
       }
       subtitle={
         <>
-          Verified context across <Num>{SOURCE_CHIPS.length}</Num> sources. REP{" "}
-          <Num>{user.totalRep.toLocaleString()}</Num> is your portable score —
-          the same one that earns chats, matches, and trust.
+          REP <Num>{user.totalRep.toLocaleString()}</Num> is your portable
+          score — the same one that earns chats, matches, and trust.
         </>
       }
       action={
@@ -366,22 +354,6 @@ export default function ProfilePage() {
               verified humans.
             </div>
           </div>
-        </div>
-
-        {/* Source chips row — M1 reference */}
-        <div className="flex flex-wrap items-center gap-2">
-          {SOURCE_CHIPS.map((s) => (
-            <Chip key={s}>
-              {s} <Check size={10} className="text-ok" />
-            </Chip>
-          ))}
-          <button
-            aria-label="Add source"
-            onClick={() => router.push("/settings")}
-            className="flex h-[26px] w-[26px] items-center justify-center rounded-full border border-line text-ink-mute transition-colors hover:border-line-strong hover:text-ink"
-          >
-            <Plus size={12} />
-          </button>
         </div>
 
         {/* AI one-liner — Fraunces italic in a Tile */}

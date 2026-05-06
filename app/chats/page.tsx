@@ -1134,14 +1134,15 @@ export default function ChatsPage() {
     setUserCreatedChats(prev => [newChat, ...prev])
   }
 
-  // Filter chats
+  // Filter chats. User-created chats render in a dedicated "Your chats"
+  // section above the catalog, so they're excluded here to avoid duplicates.
   const filteredChats = useMemo(() => {
-    let result = [...mockCatalogChats, ...userCreatedChats]
+    let result = [...mockCatalogChats]
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       result = result.filter(
-        chat => 
+        chat =>
           chat.name.toLowerCase().includes(query) ||
           chat.description.toLowerCase().includes(query) ||
           chat.creator.handle.toLowerCase().includes(query)
@@ -1157,7 +1158,7 @@ export default function ChatsPage() {
     }
 
     return result
-  }, [searchQuery, activeEcosystem, activeTab, isAuthenticated, userCreatedChats])
+  }, [searchQuery, activeEcosystem, activeTab, isAuthenticated])
 
   const availableChats = filteredChats.filter(c => c.status === "available")
   const almostUnlockedChats = filteredChats.filter(c => c.status === "almost")
@@ -1206,6 +1207,23 @@ export default function ChatsPage() {
       }
     >
       <div className="space-y-6">
+        {/* Your chats — user-created rooms, pinned to the top of the page so
+            creators can find their own rooms instantly without scrolling. */}
+        {userCreatedChats.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkle className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Your chats</h2>
+              <span className="text-sm text-muted-foreground">({userCreatedChats.length})</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {userCreatedChats.map((chat) => (
+                <ChatCard key={chat.id} chat={chat} isAuthenticated={isAuthenticated} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Visitor hero only when guest */}
         {!isAuthenticated && <VisitorHeroSection onConnect={login} />}
 
