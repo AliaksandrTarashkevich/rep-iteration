@@ -142,7 +142,7 @@ export function FinalCard({
               animation: "finalCardFlicker 2s linear infinite",
             }}
           >
-            REP / IDENTITY CARD
+            REP / SIGNATURE CARD
           </div>
           <div
             className="mb-7 mt-3"
@@ -333,9 +333,12 @@ function computeCardType(hasX: boolean, hasWallet: boolean) {
   return "REP Card"
 }
 
-function computeIdentityBadge(hasX: boolean, hasWallet: boolean) {
+// v2.2: renamed from computeIdentityBadge. Tier 5 ("Verified Human") replaced
+// with "Triple Signal" (claim-free) and now uses inline triplet check (was
+// CLOSING_DATA.antiSybil.count which was removed with C1).
+function computeSignatureBadge(hasX: boolean, hasWallet: boolean) {
   if (hasX && X_DATA.tribes[0].percentage >= 40) {
-    return `Top 5% ${X_DATA.tribes[0].name} Maxi`
+    return `Top 5% ${X_DATA.tribes[0].name}-leaning`
   }
   if (hasWallet && W_DATA.pnl.total <= -25000) {
     return "Battle-scarred Degen"
@@ -343,8 +346,14 @@ function computeIdentityBadge(hasX: boolean, hasWallet: boolean) {
   if (hasWallet && W_DATA.walletAge.years >= 4) {
     return `${W_DATA.walletAge.years}-year veteran`
   }
-  if (hasX && hasWallet && CLOSING_DATA.antiSybil.count === 3) {
-    return "Verified Human"
+  if (
+    hasX &&
+    hasWallet &&
+    X_DATA.accountAge.yearsOnX >= 4 &&
+    W_DATA.walletAge.years >= 3 &&
+    X_DATA.smartFollowers.total >= 50
+  ) {
+    return "Triple Signal"
   }
   return "Early Adopter"
 }
@@ -397,7 +406,7 @@ function computeTopSignal(
   if (hasX && X_DATA.momentum.growth30d >= 100) {
     return {
       label: "TOP SIGNAL",
-      value: `+${X_DATA.momentum.growth30d} smart followers / 30d`,
+      value: `+${X_DATA.momentum.growth30d} influence / 30d`,
     }
   }
   return null
@@ -435,7 +444,7 @@ function buildRows(hasX: boolean, hasWallet: boolean): Row[] {
   if (hasX) {
     rows.push({
       kind: "text",
-      label: "SMART FOLL.",
+      label: "INFLUENCE",
       value: X_DATA.smartFollowers.total.toLocaleString(),
     })
   }
@@ -480,8 +489,8 @@ function buildRows(hasX: boolean, hasWallet: boolean): Row[] {
 
   rows.push({
     kind: "text",
-    label: "IDENTITY",
-    value: computeIdentityBadge(hasX, hasWallet),
+    label: "SIGNATURE",
+    value: computeSignatureBadge(hasX, hasWallet),
   })
 
   return rows

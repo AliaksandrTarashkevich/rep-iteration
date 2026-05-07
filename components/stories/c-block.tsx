@@ -1,13 +1,11 @@
 "use client"
 
-import { Check, Star, Crown, Network } from "lucide-react"
+import { Star, Crown } from "lucide-react"
 import {
   StoryCard,
   BigStat,
-  MidStat,
   SubStat,
   PullQuote,
-  Pill,
   Caption,
   ShareRow,
   CountUp,
@@ -15,45 +13,8 @@ import {
 import { CLOSING_DATA } from "@/lib/mock-stories"
 import { RANK_TIERS } from "@/lib/auth-context"
 
-// C1 - VERIFIED HUMAN
-export function C1AntiSybil() {
-  const d = CLOSING_DATA.antiSybil
-  const items = [
-    { key: "twitterAge", label: "Twitter age", on: d.twitterAge },
-    { key: "walletAge", label: "Wallet age", on: d.walletAge },
-    { key: "smartFollowers", label: "Smart followers", on: d.smartFollowers },
-  ]
-  return (
-    <StoryCard label="VERIFIED HUMAN" seedKey="c1-anti-sybil">
-      <div className="mb-5 space-y-2">
-        {items.map((item, i) => (
-          <div
-            key={item.key}
-            className="flex animate-in fade-in slide-in-from-left-4 items-center gap-3 rounded-xl border border-border/40 bg-background/20 p-3"
-            style={{ animationDelay: `${i * 150}ms`, animationFillMode: "backwards" }}
-          >
-            <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                item.on ? "bg-positive/20 text-positive" : "bg-muted text-muted-foreground"
-              }`}
-            >
-              <Check className="h-4 w-4" />
-            </div>
-            <span className="text-sm font-medium text-foreground">{item.label}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mb-3 text-center">
-        <BigStat>
-          <CountUp end={d.count} duration={900} /> of 3
-        </BigStat>
-        <Caption>Unfakable signals</Caption>
-      </div>
-      <PullQuote>Bots have followers. You have proof.</PullQuote>
-      <ShareRow storyId="c1-anti-sybil" />
-    </StoryCard>
-  )
-}
+// v2.2: C1 Anti-Sybil "VERIFIED HUMAN" dropped per choly review (07/05).
+// Triple-signal logic moved inline into computeSignatureBadge in final-card.tsx.
 
 // C2 - YOUR NETWORK COMPOUNDS
 export function C2NetworkCompounding() {

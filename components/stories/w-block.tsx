@@ -67,35 +67,21 @@ export function W1OnchainSnapshot() {
   )
 }
 
-// W2 - ECOSYSTEM
+// W2 - ECOSYSTEM (v2.2: caption explicit %, EVM hook, top 5 protocols, protocols above bars)
 export function W2Ecosystem() {
-  const top = W_DATA.ecosystem.chains[0]
+  const chains = W_DATA.ecosystem.chains
+  const top = chains[0]
   return (
     <StoryCard label="ECOSYSTEM" seedKey="w2-ecosystem">
       <div className="mb-5 text-center">
         <BigStat>
           <CountUp end={top.percentage} suffix="%" />
         </BigStat>
-        <Caption>{top.name} Activity</Caption>
+        <Caption>
+          {top.name} Activity ({top.percentage}% of {chains.length} EVM chains)
+        </Caption>
       </div>
-      <div className="mb-5">
-        <div className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          <Network className="h-3 w-3" /> Chain Activity
-        </div>
-        <div className="space-y-2">
-          {W_DATA.ecosystem.chains.map((chain, i) => (
-            <div key={chain.name} className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="text-foreground">{chain.name}</span>
-                <span className="font-mono text-xs text-muted-foreground">
-                  <CountUp end={chain.percentage} duration={1200 + i * 100} suffix="%" />
-                </span>
-              </div>
-              <AnimatedBar percentage={chain.percentage * 2} delay={i * 100} />
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* v2.2: protocols row promoted above bar-chart per choly review */}
       <div className="mb-5">
         <div className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-muted-foreground">
           <Coins className="h-3 w-3" /> Top Protocols
@@ -111,7 +97,25 @@ export function W2Ecosystem() {
           ))}
         </div>
       </div>
-      <PullQuote>Multi-chain is a lifestyle, not a strategy.</PullQuote>
+      <div className="mb-5">
+        <div className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+          <Network className="h-3 w-3" /> Chain Activity
+        </div>
+        <div className="space-y-2">
+          {chains.map((chain, i) => (
+            <div key={chain.name} className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="text-foreground">{chain.name}</span>
+                <span className="font-mono text-xs text-muted-foreground">
+                  <CountUp end={chain.percentage} duration={1200 + i * 100} suffix="%" />
+                </span>
+              </div>
+              <AnimatedBar percentage={chain.percentage * 2} delay={i * 100} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <PullQuote>EVM-native, not chain-locked.</PullQuote>
       <ShareRow storyId="w2-ecosystem" />
     </StoryCard>
   )

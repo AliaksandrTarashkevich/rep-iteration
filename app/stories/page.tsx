@@ -4,13 +4,11 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { StoryShareActions } from "@/components/story-share-actions"
 import { Num } from "@/components/ui/primitives"
+// v2.2: X4 / X5 / X6 dropped per choly review (07/05) — see STORIES_DEV_HANDOFF §13.
 import {
   X1SmartFollowers,
   X2NotableFollowers,
   X3InnerCircle,
-  X4TopInteractions,
-  X5AudienceAuthenticity,
-  X6EngagementQuality,
   X7Tribes,
   X8Mindshare,
   X9AccountAge,
@@ -27,8 +25,8 @@ import {
   W8TokenDiversity,
   W9GasStation,
 } from "@/components/stories/w-block"
+// v2.2: C1 Anti-Sybil dropped per choly review.
 import {
-  C1AntiSybil,
   C2NetworkCompounding,
   C3Rank,
 } from "@/components/stories/c-block"
@@ -37,6 +35,7 @@ import {
   ConnectXPrompt,
   BlurredOnchain,
   BlurredTwitter,
+  SolanaFollowupPrompt,
   SubscribePrompt,
 } from "@/components/stories/intermediate"
 import { FinalCard, finalCardShareText } from "@/components/stories/final-card"
@@ -50,16 +49,14 @@ import {
 } from "@/lib/mock-stories"
 
 // ---------------------------------------------------------------------------
-// Block sequences per spec §1 (in order, with all 10/9/3 stories)
+// Block sequences per spec §1 (v2.2: 7 X stories, 9 W stories, 2 closing).
+// X4 / X5 / X6 / C1 dropped per choly review (07/05).
 // ---------------------------------------------------------------------------
 
 const X_BLOCK: StoryId[] = [
   "x1-smart-followers",
   "x2-notable-followers",
   "x3-inner-circle",
-  "x4-top-interactions",
-  "x5-audience-authenticity",
-  "x6-engagement-quality",
   "x7-tribes",
   "x8-mindshare",
   "x9-account-age",
@@ -91,6 +88,8 @@ function buildPath({
   hasWallet,
   skippedX,
   skippedWallet,
+  hasSolanaWallet,
+  skippedSolana,
   subscribedToR3p,
 }: {
   primarySource: "x" | "wallet"
@@ -98,6 +97,8 @@ function buildPath({
   hasWallet: boolean
   skippedX: boolean
   skippedWallet: boolean
+  hasSolanaWallet: boolean
+  skippedSolana: boolean
   subscribedToR3p: boolean
 }): StoryId[] {
   const seq: StoryId[] = []
@@ -128,16 +129,16 @@ function buildPath({
     if (hasWallet) seq.push(...W_BLOCK_TAIL.filter(evaluateTrigger))
   }
 
-  // ---- Closing block ----
-  // C1 needs both sources connected (≥2 of 3 signals)
-  if (hasX && hasWallet && evaluateTrigger("c1-anti-sybil")) {
-    seq.push("c1-anti-sybil")
-  }
-  // C2 always shows
+  // ---- Closing block (v2.2: C1 dropped — only C2 always + C3 if eligible) ----
   seq.push("c2-network-compounding")
-  // C3 only if percentile ≤ 50%
   if (evaluateTrigger("c3-rank")) {
     seq.push("c3-rank")
+  }
+
+  // ---- Solana follow-up (v2.2 §5.4) — only if EVM wallet is connected
+  // (separate prompt, after closing block per spec). Skipped state persists.
+  if (hasWallet && !hasSolanaWallet && !skippedSolana) {
+    seq.push("solana-followup")
   }
 
   // ---- Subscribe prompt (only if X connected and not subscribed) ----
@@ -161,6 +162,8 @@ function StoryRenderer({
   onConnectX,
   onSkipWallet,
   onSkipX,
+  onSolanaContinue,
+  onSolanaSkip,
   onSubscribeContinue,
   onSubscribeSkip,
   hasX,
@@ -174,6 +177,8 @@ function StoryRenderer({
   onConnectX: () => void
   onSkipWallet: () => void
   onSkipX: () => void
+  onSolanaContinue: () => void
+  onSolanaSkip: () => void
   onSubscribeContinue: () => void
   onSubscribeSkip: () => void
   hasX: boolean
@@ -186,9 +191,6 @@ function StoryRenderer({
     case "x1-smart-followers": return <X1SmartFollowers />
     case "x2-notable-followers": return <X2NotableFollowers />
     case "x3-inner-circle": return <X3InnerCircle />
-    case "x4-top-interactions": return <X4TopInteractions />
-    case "x5-audience-authenticity": return <X5AudienceAuthenticity />
-    case "x6-engagement-quality": return <X6EngagementQuality />
     case "x7-tribes": return <X7Tribes />
     case "x8-mindshare": return <X8Mindshare />
     case "x9-account-age": return <X9AccountAge />
@@ -204,7 +206,6 @@ function StoryRenderer({
     case "w8-token-diversity": return <W8TokenDiversity />
     case "w9-gas-station": return <W9GasStation />
 
-    case "c1-anti-sybil": return <C1AntiSybil />
     case "c2-network-compounding": return <C2NetworkCompounding />
     case "c3-rank": return <C3Rank />
 
@@ -216,6 +217,13 @@ function StoryRenderer({
       return <BlurredOnchain onConnect={onConnectWallet} />
     case "blurred-twitter":
       return <BlurredTwitter onConnect={onConnectX} />
+    case "solana-followup":
+      return (
+        <SolanaFollowupPrompt
+          onContinue={onSolanaContinue}
+          onSkip={onSolanaSkip}
+        />
+      )
     case "subscribe-rep":
       return (
         <SubscribePrompt
@@ -257,6 +265,9 @@ function StoriesContent() {
   const [hasWallet, setHasWallet] = useState(initialSource === "wallet")
   const [skippedX, setSkippedX] = useState(false)
   const [skippedWallet, setSkippedWallet] = useState(false)
+  // v2.2 §5.4 — Solana follow-up state
+  const [hasSolanaWallet, setHasSolanaWallet] = useState(false)
+  const [skippedSolana, setSkippedSolana] = useState(false)
   const [subscribedToR3p, setSubscribedToR3p] = useState(false)
 
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -271,9 +282,20 @@ function StoriesContent() {
         hasWallet,
         skippedX,
         skippedWallet,
+        hasSolanaWallet,
+        skippedSolana,
         subscribedToR3p,
       }),
-    [primarySource, hasX, hasWallet, skippedX, skippedWallet, subscribedToR3p],
+    [
+      primarySource,
+      hasX,
+      hasWallet,
+      skippedX,
+      skippedWallet,
+      hasSolanaWallet,
+      skippedSolana,
+      subscribedToR3p,
+    ],
   )
 
   const totalStories = stories.length
@@ -293,6 +315,12 @@ function StoriesContent() {
   const goPrev = useCallback(() => {
     setCurrentIndex((i) => Math.max(i - 1, 0))
   }, [])
+
+  // v2.2 §5.1 navigation override: prompt-type slots disable forward gestures.
+  // Progress only via on-card buttons (Connect / Skip / Continue).
+  const isPromptSlot = currentId
+    ? STORY_REGISTRY[currentId].kind === "prompt"
+    : false
 
   // For connect/skip handlers: the path itself mutates so the prompt slot
   // is replaced in-place by the next eligible story (W1, blurred card, or X1).
@@ -315,6 +343,17 @@ function StoriesContent() {
     setSkippedX(true)
   }
 
+  const handleSolanaContinue = () => {
+    // V0: removing solana-followup from path shifts the next eligible story
+    // into the same slot. V0+: actual Solana wallet integration.
+    setHasSolanaWallet(true)
+    setSkippedSolana(false)
+  }
+
+  const handleSolanaSkip = () => {
+    setSkippedSolana(true)
+  }
+
   const handleSubscribeContinue = () => {
     // Removing subscribe-rep from path shifts summary into the same slot.
     setSubscribedToR3p(true)
@@ -324,18 +363,18 @@ function StoriesContent() {
     router.push("/claim")
   }
 
-  // Keyboard navigation
+  // Keyboard navigation. v2.2: ArrowRight disabled on prompt slots.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") goNext()
+      if (e.key === "ArrowRight" && !isPromptSlot) goNext()
       if (e.key === "ArrowLeft") goPrev()
       if (e.key === "Escape") router.push("/")
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [goNext, goPrev, router])
+  }, [goNext, goPrev, router, isPromptSlot])
 
-  // Touch swipe
+  // Touch swipe. v2.2: forward swipe disabled on prompt slots.
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.touches[0].clientX)
   }
@@ -343,20 +382,27 @@ function StoriesContent() {
     if (touchStart === null) return
     const diff = touchStart - e.changedTouches[0].clientX
     if (Math.abs(diff) > 50) {
-      if (diff > 0) goNext()
-      else goPrev()
+      if (diff > 0) {
+        if (!isPromptSlot) goNext()
+      } else {
+        goPrev()
+      }
     }
     setTouchStart(null)
   }
 
-  // Click navigation (right 70% = next, left 30% = prev)
+  // Click navigation (right 70% = next, left 30% = prev).
+  // v2.2: forward click-zone disabled on prompt slots — choly review.
   const handleAreaClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement
-    if (target.closest("button") || target.closest("a")) return
+    if (target.closest("button") || target.closest("a") || target.closest("input")) return
     const rect = e.currentTarget.getBoundingClientRect()
     const pct = (e.clientX - rect.left) / rect.width
-    if (pct > 0.7) goNext()
-    else if (pct < 0.3) goPrev()
+    if (pct > 0.7) {
+      if (!isPromptSlot) goNext()
+    } else if (pct < 0.3) {
+      goPrev()
+    }
   }
 
   // Top-right share icon — only for shareable slides
@@ -377,22 +423,30 @@ function StoriesContent() {
         <StoryBg />
       </div>
       <div className="relative z-[1] flex h-full flex-col">
-      {/* Progress bars */}
+      {/* Progress bars. v2.2: prompt-slot segments are not jump-clickable so
+          users can't bypass a Connect prompt with a single bar tap. */}
       <div className="flex gap-1 p-4">
-        {stories.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentIndex(i)}
-            className={`flex-1 h-[2px] rounded-full transition-colors ${
-              i === currentIndex
-                ? "bg-accent shadow-[0_0_6px_rgba(140,213,254,0.5)]"
-                : i < currentIndex
-                  ? "bg-accent/50"
-                  : "bg-line-strong"
-            }`}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
+        {stories.map((id, i) => {
+          const isPrompt = STORY_REGISTRY[id].kind === "prompt"
+          const className = `flex-1 h-[2px] rounded-full transition-colors ${
+            i === currentIndex
+              ? "bg-accent shadow-[0_0_6px_rgba(140,213,254,0.5)]"
+              : i < currentIndex
+                ? "bg-accent/50"
+                : "bg-line-strong"
+          }`
+          if (isPrompt) {
+            return <div key={i} className={className} aria-hidden="true" />
+          }
+          return (
+            <button
+              key={i}
+              onClick={() => setCurrentIndex(i)}
+              className={className}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          )
+        })}
       </div>
 
       {/* Top-right share icon */}
@@ -420,6 +474,8 @@ function StoriesContent() {
               onConnectX={handleConnectX}
               onSkipWallet={handleSkipWallet}
               onSkipX={handleSkipX}
+              onSolanaContinue={handleSolanaContinue}
+              onSolanaSkip={handleSolanaSkip}
               onSubscribeContinue={handleSubscribeContinue}
               onSubscribeSkip={() => goNext()}
               hasX={hasX}

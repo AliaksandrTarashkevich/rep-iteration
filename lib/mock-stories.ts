@@ -9,13 +9,12 @@ export type StoryKind =
   | "blurred"
   | "summary"
 
+// v2.2: x4-top-interactions, x5-audience-authenticity, x6-engagement-quality,
+// c1-anti-sybil dropped per choly review (07/05). solana-followup added (§5.4).
 export type StoryId =
   | "x1-smart-followers"
   | "x2-notable-followers"
   | "x3-inner-circle"
-  | "x4-top-interactions"
-  | "x5-audience-authenticity"
-  | "x6-engagement-quality"
   | "x7-tribes"
   | "x8-mindshare"
   | "x9-account-age"
@@ -29,13 +28,13 @@ export type StoryId =
   | "w7-diamond-hands"
   | "w8-token-diversity"
   | "w9-gas-station"
-  | "c1-anti-sybil"
   | "c2-network-compounding"
   | "c3-rank"
   | "connect-wallet"
   | "connect-x"
   | "blurred-onchain"
   | "blurred-twitter"
+  | "solana-followup"
   | "subscribe-rep"
   | "summary"
 
@@ -80,27 +79,7 @@ export const X_DATA = {
     { handle: "blknoiz06", score: 91, avatarUrl: getAvatarUrl("blknoiz06") },
   ],
 
-  // X4 Top Interactions (your daily orbit)
-  topInteractions: [
-    { handle: "blknoiz06", interactions: 47, avatarUrl: getAvatarUrl("blknoiz06") },
-    { handle: "hsaka", interactions: 38, avatarUrl: getAvatarUrl("hsaka") },
-    { handle: "0xMert_", interactions: 24, avatarUrl: getAvatarUrl("0xMert_") },
-  ],
-
-  // X5 Audience Authenticity
-  audienceAuthenticity: {
-    realPercentage: 87,
-    qualityTier: "high signal",
-  },
-
-  // X6 Engagement Quality
-  engagement: {
-    qualityScore: 8.4,
-    smartEngagementRate: "12.3%",
-    tier: "High Signal",
-  },
-
-  // X7 Tribes
+  // X7 Tribes (label "YOUR ORBIT" в UI v2.2; data shape без изменений)
   tribes: [
     { name: "DeFi", percentage: 34 },
     { name: "NFT/Art", percentage: 22 },
@@ -142,7 +121,7 @@ export const W_DATA = {
     tier: "Power User",
   },
 
-  // W2 Ecosystem
+  // W2 Ecosystem (v2.2: top 5 protocols, было 3)
   ecosystem: {
     chains: [
       { name: "Ethereum", percentage: 45 },
@@ -151,7 +130,7 @@ export const W_DATA = {
       { name: "Optimism", percentage: 8 },
       { name: "Polygon", percentage: 4 },
     ],
-    protocols: ["Uniswap", "Aave", "Compound"],
+    protocols: ["Uniswap", "Aave", "Compound", "Lido", "Curve"],
   },
 
   // W3 Wallet Age
@@ -204,15 +183,8 @@ export const W_DATA = {
 }
 
 export const CLOSING_DATA = {
-  // C1 Anti-Sybil — composite of X9 + W3 + X1
-  antiSybil: {
-    twitterAge: true, // X9 → years_on_x ≥ 4
-    walletAge: true, // W3 → years_onchain ≥ 3
-    smartFollowers: true, // X1 → smart_followers_count ≥ 50
-    get count() {
-      return [this.twitterAge, this.walletAge, this.smartFollowers].filter(Boolean).length
-    },
-  },
+  // v2.2: C1 Anti-Sybil dropped (choly review). Triple-signal logic moved
+  // inline into computeSignatureBadge in components/stories/final-card.tsx.
 
   // C2 Network Compounding
   networkCompounding: {
@@ -242,14 +214,11 @@ export const FINAL_CARD = {
 // ---------------------------------------------------------------------------
 
 export const STORY_REGISTRY: Record<StoryId, StoryDescriptor> = {
-  "x1-smart-followers": { id: "x1-smart-followers", block: "x", kind: "data", label: "SMART FOLLOWERS", shareable: true, requiresSource: "x" },
+  "x1-smart-followers": { id: "x1-smart-followers", block: "x", kind: "data", label: "INFLUENCE", shareable: true, requiresSource: "x" },
   "x2-notable-followers": { id: "x2-notable-followers", block: "x", kind: "data", label: "NOTABLE FOLLOWERS", shareable: true, requiresSource: "x" },
   "x3-inner-circle": { id: "x3-inner-circle", block: "x", kind: "data", label: "INNER CIRCLE", shareable: true, requiresSource: "x" },
-  "x4-top-interactions": { id: "x4-top-interactions", block: "x", kind: "data", label: "YOUR DAILY ORBIT", shareable: true, requiresSource: "x" },
-  "x5-audience-authenticity": { id: "x5-audience-authenticity", block: "x", kind: "data", label: "AUDIENCE AUTHENTICITY", shareable: true, requiresSource: "x" },
-  "x6-engagement-quality": { id: "x6-engagement-quality", block: "x", kind: "data", label: "ENGAGEMENT QUALITY", shareable: true, requiresSource: "x" },
-  "x7-tribes": { id: "x7-tribes", block: "x", kind: "data", label: "YOUR TRIBES", shareable: true, requiresSource: "x" },
-  "x8-mindshare": { id: "x8-mindshare", block: "x", kind: "data", label: "MINDSHARE LEADER", shareable: true, requiresSource: "x" },
+  "x7-tribes": { id: "x7-tribes", block: "x", kind: "data", label: "YOUR ORBIT", shareable: true, requiresSource: "x" },
+  "x8-mindshare": { id: "x8-mindshare", block: "x", kind: "data", label: "CONVERSATION DRIVER", shareable: true, requiresSource: "x" },
   "x9-account-age": { id: "x9-account-age", block: "x", kind: "data", label: "X SENIORITY", shareable: true, requiresSource: "x" },
   "x10-momentum": { id: "x10-momentum", block: "x", kind: "data", label: "MOMENTUM", shareable: true, requiresSource: "x" },
 
@@ -263,7 +232,6 @@ export const STORY_REGISTRY: Record<StoryId, StoryDescriptor> = {
   "w8-token-diversity": { id: "w8-token-diversity", block: "w", kind: "data", label: "PORTFOLIO DIVERSITY", shareable: true, requiresSource: "wallet" },
   "w9-gas-station": { id: "w9-gas-station", block: "w", kind: "data", label: "GAS STATION REGULAR", shareable: true, requiresSource: "wallet" },
 
-  "c1-anti-sybil": { id: "c1-anti-sybil", block: "c", kind: "data", label: "VERIFIED HUMAN", shareable: true },
   "c2-network-compounding": { id: "c2-network-compounding", block: "c", kind: "data", label: "YOUR NETWORK COMPOUNDS", shareable: true },
   "c3-rank": { id: "c3-rank", block: "c", kind: "data", label: "YOUR RANK", shareable: true },
 
@@ -271,6 +239,7 @@ export const STORY_REGISTRY: Record<StoryId, StoryDescriptor> = {
   "connect-x": { id: "connect-x", block: "intermediate", kind: "prompt", label: "CONNECT X", shareable: false },
   "blurred-onchain": { id: "blurred-onchain", block: "intermediate", kind: "blurred", label: "ONCHAIN LOCKED", shareable: false },
   "blurred-twitter": { id: "blurred-twitter", block: "intermediate", kind: "blurred", label: "SOCIAL LOCKED", shareable: false },
+  "solana-followup": { id: "solana-followup", block: "intermediate", kind: "prompt", label: "ADD SOLANA", shareable: false },
   "subscribe-rep": { id: "subscribe-rep", block: "intermediate", kind: "prompt", label: "FOLLOW @R3P", shareable: false },
 
   summary: { id: "summary", block: "final", kind: "summary", label: "REP CARD", shareable: true },
@@ -295,24 +264,16 @@ export const SHARE_TEXT: Record<StoryId, (handle: string) => string> = {
     const [a, b, c] = X_DATA.innerCircle
     return `My inner circle on @R3P:\n\n@${a.handle} · @${b.handle} · @${c.handle}\n\nTrust is mutual. Who's yours?\n\n${repLink(h)}`
   },
-  "x4-top-interactions": (h) => {
-    const [a, b, c] = X_DATA.topInteractions
-    return `My daily orbit on @R3P:\n\n@${a.handle} · @${b.handle} · @${c.handle}\n\nThe people you talk to define who you become. Who's yours?\n\n${repLink(h)}`
-  },
-  "x5-audience-authenticity": (h) =>
-    `${X_DATA.audienceAuthenticity.realPercentage}% of my followers are real humans.\n\nNo bots. No bought followers. Verified by @R3P.\n\nCheck yours -> ${repLink(h)}`,
-  "x6-engagement-quality": (h) =>
-    `${X_DATA.engagement.tier} engagement on @R3P. ${X_DATA.engagement.smartEngagementRate} smart interaction rate.\n\nInfluence isn't followers - it's resonance.\n\n${repLink(h)}`,
   "x7-tribes": (h) => {
     const top = X_DATA.tribes[0]
-    return `I'm ${top.percentage}% ${top.name} according to @R3P.\n\nWhat tribe are you?\n\n${repLink(h)}`
+    return `I'm ${top.percentage}% ${top.name}-leaning according to @R3P.\n\nWhat's your orbit?\n\n${repLink(h)}`
   },
   "x8-mindshare": (h) =>
-    `Top ${X_DATA.mindshare.percentile}% mindshare in ${X_DATA.mindshare.category} this week.\n\nNot following the conversation. Becoming it.\n\n${repLink(h)}`,
+    `Top ${X_DATA.mindshare.percentile}% voice in ${X_DATA.mindshare.category} this week.\n\nNot following the conversation. Becoming it.\n\n${repLink(h)}`,
   "x9-account-age": (h) =>
     `On X since ${X_DATA.accountAge.monthYear}. ${X_DATA.accountAge.yearsOnX} years of building in public.\n\n${X_DATA.accountAge.ogTier} verified by @R3P.\n\n${repLink(h)}`,
   "x10-momentum": (h) =>
-    `+${X_DATA.momentum.growth30d} smart followers in 30 days. ${X_DATA.momentum.label}.\n\nTrack your signal on @R3P.\n\n${repLink(h)}`,
+    `+${X_DATA.momentum.growth30d} influence followers in 30 days. ${X_DATA.momentum.label}.\n\nTrack your signal on @R3P.\n\n${repLink(h)}`,
 
   "w1-onchain-snapshot": (h) => {
     const d = W_DATA.onchainSnapshot
@@ -320,7 +281,7 @@ export const SHARE_TEXT: Record<StoryId, (handle: string) => string> = {
   },
   "w2-ecosystem": (h) => {
     const top = W_DATA.ecosystem.chains[0]
-    return `${top.percentage}% ${top.name}. The rest? Scattered across ${W_DATA.ecosystem.chains.length} chains.\n\nMy ecosystem on @R3P.\n\n${repLink(h)}`
+    return `${top.percentage}% ${top.name}. The rest? Scattered across ${W_DATA.ecosystem.chains.length} EVM chains.\n\nMy ecosystem on @R3P.\n\n${repLink(h)}`
   },
   "w3-wallet-age": (h) =>
     `On-chain since ${W_DATA.walletAge.firstTxDate}. ${W_DATA.walletAge.years} years.\n\n${W_DATA.walletAge.ogTier} - verified by @R3P.\n\n${repLink(h)}`,
@@ -350,8 +311,6 @@ export const SHARE_TEXT: Record<StoryId, (handle: string) => string> = {
   "w9-gas-station": (h) =>
     `Gas Station Regular on @R3P.\n\nBurned more gas than ${100 - W_DATA.gasStation.percentile}% of users. No regrets. Okay, maybe some.\n\n${repLink(h)}`,
 
-  "c1-anti-sybil": (h) =>
-    `${CLOSING_DATA.antiSybil.count} of 3 unfakable signals on @R3P.\n\nBots have followers. Humans have proof.\n\n${repLink(h)}`,
   "c2-network-compounding": (h) =>
     `My 4-gen network on @R3P can reach ${CLOSING_DATA.networkCompounding.reach4gen} people.\n\nTrust compounds. Followers don't.\n\n${repLink(h)}`,
   "c3-rank": (h) => {
@@ -363,6 +322,7 @@ export const SHARE_TEXT: Record<StoryId, (handle: string) => string> = {
   "connect-x": () => "",
   "blurred-onchain": () => "",
   "blurred-twitter": () => "",
+  "solana-followup": () => "",
   "subscribe-rep": () => "",
 
   summary: (h) => {
@@ -384,12 +344,6 @@ export function evaluateTrigger(id: StoryId): boolean {
       return X_DATA.notableFollowers.length >= 1
     case "x3-inner-circle":
       return X_DATA.innerCircle.length >= 3
-    case "x4-top-interactions":
-      return X_DATA.topInteractions.length >= 3
-    case "x5-audience-authenticity":
-      return true
-    case "x6-engagement-quality":
-      return parseFloat(X_DATA.engagement.smartEngagementRate) >= 5
     case "x7-tribes":
       return X_DATA.tribes.some((t) => t.percentage >= 10)
     case "x8-mindshare":
@@ -418,8 +372,6 @@ export function evaluateTrigger(id: StoryId): boolean {
     case "w9-gas-station":
       return W_DATA.gasStation.gasSpent >= 1000
 
-    case "c1-anti-sybil":
-      return CLOSING_DATA.antiSybil.count >= 2
     case "c2-network-compounding":
       return true
     case "c3-rank":

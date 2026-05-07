@@ -1,8 +1,28 @@
 "use client"
 
+import { useState } from "react"
 import { Wallet, Twitter, ChevronRight, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StoryCard } from "./primitives"
+
+// Inline Solana glyph — small purple-to-green gradient mark used by Solana brand.
+function SolanaGlyph({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="sol-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#9945FF" />
+          <stop offset="100%" stopColor="#14F195" />
+        </linearGradient>
+      </defs>
+      <g fill="url(#sol-grad)">
+        <path d="M5 7l3-3h11l-3 3z" />
+        <path d="M5 13l3-3h11l-3 3z" />
+        <path d="M5 19l3-3h11l-3 3z" />
+      </g>
+    </svg>
+  )
+}
 
 export function ConnectWalletPrompt({
   onConnect,
@@ -198,6 +218,83 @@ export function BlurredTwitter({ onConnect }: { onConnect: () => void }) {
         <Twitter className="mr-2 h-4 w-4" />
         Connect X
       </Button>
+    </StoryCard>
+  )
+}
+
+// v2.2 §5.4 — Solana Follow-up prompt. Inserted after W-block when EVM wallet
+// is connected. V0: placeholder waitlist (email capture inline). V0+: real
+// Phantom / Solflare integration + Helius API.
+export function SolanaFollowupPrompt({
+  onContinue,
+  onSkip,
+}: {
+  onContinue: () => void
+  onSkip: () => void
+}) {
+  const [email, setEmail] = useState("")
+  const [joined, setJoined] = useState(false)
+
+  const handleJoin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim()) return
+    // V0: no real backend. Mark as joined and proceed.
+    setJoined(true)
+    setTimeout(onContinue, 600)
+  }
+
+  return (
+    <StoryCard label="ADD SOLANA" variant="prompt" seedKey="solana-followup">
+      <div className="text-center">
+        <div className="mx-auto mb-5 flex items-center justify-center gap-3">
+          <span className="glow flex items-center text-5xl font-bold leading-none tracking-tight text-primary">
+            <span className="text-primary">+</span>
+            <span className="italic">REP</span>
+          </span>
+          <span className="h-12 w-px bg-border/60" aria-hidden="true" />
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 ring-1 ring-primary/30">
+            <SolanaGlyph className="h-6 w-6" />
+          </span>
+        </div>
+        <h3 className="mb-2 text-xl font-bold text-foreground">
+          Bring your Solana side too
+        </h3>
+        <p className="mb-2 text-sm text-foreground/70">
+          REP supports Solana wallets. Add yours to extend your onchain story.
+        </p>
+        <p className="mb-6 text-sm font-medium text-positive">+25 REP bonus</p>
+
+        {joined ? (
+          <p className="mb-3 text-sm font-medium text-accent">
+            {"You're on the list. We'll ping you when Solana goes live."}
+          </p>
+        ) : (
+          <form onSubmit={handleJoin} className="mb-3 space-y-2">
+            <input
+              type="email"
+              required
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full rounded-lg border border-border/60 bg-background/40 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none"
+            />
+            <Button
+              type="submit"
+              className="w-full bg-foreground text-background hover:bg-foreground/90"
+            >
+              Add Solana Wallet
+            </Button>
+          </form>
+        )}
+
+        <button
+          onClick={onSkip}
+          className="mx-auto flex items-center justify-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Maybe later <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
     </StoryCard>
   )
 }

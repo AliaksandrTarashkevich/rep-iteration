@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import {
   Briefcase,
+  HelpCircle,
   Layers,
   Users,
 } from "lucide-react"
@@ -13,13 +15,13 @@ import {
   SubStat,
   PullQuote,
   TierLabel,
-  AnimatedDonut,
   Caption,
   ShareRow,
   CountUp,
 } from "./primitives"
 import { X_DATA } from "@/lib/mock-stories"
 
+// v2.2: TRIBE_COLORS retained — used for "YOUR ORBIT" cluster colouring (X7).
 const TRIBE_COLORS: Record<string, { bg: string; text: string; bar: string }> = {
   DeFi: { bg: "bg-emerald-500/20", text: "text-emerald-400", bar: "bg-emerald-500" },
   "NFT/Art": { bg: "bg-fuchsia-500/20", text: "text-fuchsia-400", bar: "bg-fuchsia-500" },
@@ -28,15 +30,39 @@ const TRIBE_COLORS: Record<string, { bg: string; text: string; bar: string }> = 
   Builders: { bg: "bg-sky-500/20", text: "text-sky-400", bar: "bg-sky-500" },
 }
 
-// X1 - SMART FOLLOWERS
+// v2.2: rename SMART FOLLOWERS → INFLUENCE + tooltip (choly review)
+const INFLUENCE_TOOLTIP =
+  "Influence is calculated from your social graph: rank on X, activity, and the influence of accounts following you."
+
 export function X1SmartFollowers() {
   const d = X_DATA.smartFollowers
+  const [showTooltip, setShowTooltip] = useState(false)
   return (
-    <StoryCard label="SMART FOLLOWERS" seedKey="x1-smart-followers">
+    <StoryCard label="INFLUENCE" seedKey="x1-smart-followers">
       <div className="mb-5 text-center">
-        <BigStat>
-          <CountUp end={d.total} />
-        </BigStat>
+        <div className="relative inline-flex items-center gap-2">
+          <BigStat>
+            <CountUp end={d.total} />
+          </BigStat>
+          <button
+            type="button"
+            aria-label="What does Influence mean?"
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowTooltip((v) => !v)
+            }}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            className="text-ink-faint transition-colors hover:text-accent"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </button>
+          {showTooltip && (
+            <div className="absolute left-1/2 top-full z-10 mt-2 w-64 -translate-x-1/2 rounded-lg border border-border/60 bg-background/95 p-3 text-left text-xs text-foreground/80 shadow-lg backdrop-blur-sm">
+              {INFLUENCE_TOOLTIP}
+            </div>
+          )}
+        </div>
         <Caption>HIGH-SIGNAL FOLLOWERS</Caption>
       </div>
       <div className="mb-5 grid grid-cols-3 gap-3 rounded-xl border border-border/40 bg-background/20 p-3">
@@ -117,88 +143,19 @@ export function X3InnerCircle() {
   )
 }
 
-// X4 - YOUR DAILY ORBIT (top interactions)
-export function X4TopInteractions() {
-  return (
-    <StoryCard label="YOUR DAILY ORBIT" seedKey="x4-top-interactions">
-      <p className="mb-5 text-center text-sm text-ink-mute">
-        The 3 accounts you engage with most
-      </p>
-      <div className="mb-5 grid grid-cols-3 gap-2">
-        {X_DATA.topInteractions.map((c, i) => (
-          <div
-            key={c.handle}
-            className="flex animate-in fade-in zoom-in-95 flex-col items-center gap-2 rounded-xl border border-border/40 bg-background/20 p-3 text-center"
-            style={{ animationDelay: `${i * 150}ms`, animationFillMode: "backwards" }}
-          >
-            <div className="relative h-12 w-12 overflow-hidden rounded-full ring-1 ring-border/60">
-              <Image src={c.avatarUrl} alt={c.handle} fill sizes="48px" className="object-cover" />
-            </div>
-            <div className="truncate text-xs font-medium text-foreground">@{c.handle}</div>
-            <div className="font-mono text-[11px] text-ink-mute">
-              <CountUp end={c.interactions} duration={1200 + i * 100} />/30d
-            </div>
-          </div>
-        ))}
-      </div>
-      <PullQuote>{"Show us who you talk to. We'll show you who you are."}</PullQuote>
-      <ShareRow storyId="x4-top-interactions" />
-    </StoryCard>
-  )
-}
+// v2.2: X4 Top Interactions, X5 Audience Authenticity, X6 Engagement Quality
+// dropped per choly review (07/05). See STORIES_DEV_HANDOFF.md §13 v2.2.
 
-// X5 - AUDIENCE AUTHENTICITY
-export function X5AudienceAuthenticity() {
-  const d = X_DATA.audienceAuthenticity
-  return (
-    <StoryCard label="AUDIENCE AUTHENTICITY" seedKey="x5-audience-authenticity">
-      <div className="mb-5 text-center">
-        <BigStat>
-          <CountUp end={d.realPercentage} suffix="%" />
-        </BigStat>
-        <Caption>REAL FOLLOWERS</Caption>
-      </div>
-      <div className="mb-5 flex justify-center">
-        <AnimatedDonut percentage={d.realPercentage} />
-      </div>
-      <PullQuote>
-        Your audience is <span className="text-accent">{d.qualityTier}</span>. No bots here.
-      </PullQuote>
-      <ShareRow storyId="x5-audience-authenticity" />
-    </StoryCard>
-  )
-}
-
-// X6 - ENGAGEMENT QUALITY
-export function X6EngagementQuality() {
-  const d = X_DATA.engagement
-  return (
-    <StoryCard label="ENGAGEMENT QUALITY" seedKey="x6-engagement-quality">
-      <div className="mb-3 text-center">
-        <BigStat>
-          <CountUp end={d.qualityScore} decimals={1} />
-        </BigStat>
-        <Caption>SMART INTERACTION RATE: {d.smartEngagementRate}</Caption>
-      </div>
-      <div className="mb-5">
-        <TierLabel>{d.tier}</TierLabel>
-      </div>
-      <PullQuote>Your content resonates with signal, not noise.</PullQuote>
-      <ShareRow storyId="x6-engagement-quality" />
-    </StoryCard>
-  )
-}
-
-// X7 - YOUR TRIBES
+// X7 - YOUR ORBIT (renamed from YOUR TRIBES in v2.2)
 export function X7Tribes() {
   const top = X_DATA.tribes[0]
   return (
-    <StoryCard label="YOUR TRIBES" seedKey="x7-tribes">
+    <StoryCard label="YOUR ORBIT" seedKey="x7-tribes">
       <div className="mb-5 text-center">
         <BigStat>
           <CountUp end={top.percentage} suffix="%" />
         </BigStat>
-        <Caption>{top.name} Maxi</Caption>
+        <Caption>{top.name}-leaning</Caption>
       </div>
       <div className="mb-5 space-y-3">
         {X_DATA.tribes.map((t, i) => {
@@ -237,18 +194,18 @@ export function X7Tribes() {
   )
 }
 
-// X8 - MINDSHARE LEADER
+// X8 - CONVERSATION DRIVER (renamed from MINDSHARE LEADER in v2.2)
 export function X8Mindshare() {
   const d = X_DATA.mindshare
   return (
-    <StoryCard label="MINDSHARE LEADER" seedKey="x8-mindshare">
+    <StoryCard label="CONVERSATION DRIVER" seedKey="x8-mindshare">
       <div className="mb-3 text-center">
         <BigStat>
           Top <CountUp end={d.percentile} suffix="%" />
         </BigStat>
       </div>
       <div className="mb-5 text-center">
-        <Caption>Mindshare in {d.category}</Caption>
+        <Caption>Top voice in {d.category}</Caption>
       </div>
       <PullQuote>{"You're not following the conversation. You are it."}</PullQuote>
       <ShareRow storyId="x8-mindshare" />
@@ -301,7 +258,7 @@ export function X10Momentum() {
         <BigStat>
           +<CountUp end={d.growth30d} />
         </BigStat>
-        <Caption>New smart followers this month</Caption>
+        <Caption>New influence followers this month</Caption>
       </div>
       <div className="mb-4 flex justify-center">
         <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} className="overflow-visible">
