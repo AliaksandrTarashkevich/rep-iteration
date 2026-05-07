@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
+import { SectionTitle } from "@/components/ui/primitives"
 
 // Platform icon component
 function PlatformIcon({ platform }: { platform: string }) {
@@ -148,7 +149,7 @@ export default function SettingsPage() {
     <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="section-title text-2xl">SETTINGS</h1>
+        <SectionTitle as="h1">SETTINGS</SectionTitle>
       </div>
 
       {/* Connected Accounts Section */}
@@ -210,7 +211,7 @@ export default function SettingsPage() {
       </section>
 
       {/* REP Info */}
-      <section className="solid-card p-4">
+      <section className="rep-surface-glass-blur rep-glass-stroke-muted p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-foreground">Your REP Score</p>

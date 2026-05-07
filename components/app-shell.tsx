@@ -4,6 +4,7 @@ import { type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { MobileNav } from "@/components/mobile-nav"
+import { HorizonGlow } from "@/components/horizon-glow"
 
 interface AppShellProps {
   children: ReactNode
@@ -26,6 +27,8 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-bg">
+      {/* Global ambient horizon glow — sits behind every authenticated page. */}
+      <HorizonGlow />
       <Sidebar />
       <main className="relative z-10 md:ml-[240px]">
         <div className="min-h-screen pb-20 md:pb-0">{children}</div>

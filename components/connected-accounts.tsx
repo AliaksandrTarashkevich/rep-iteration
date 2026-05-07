@@ -139,7 +139,7 @@ export function ConnectedAccounts({
   }
 
   return (
-    <div className="solid-card p-4">
+    <div className="rep-surface-glass-blur rep-glass-stroke-bright p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 gap-2">
         <div className="min-w-0">

@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PageShell } from "@/components/ui/page-shell"
+import { SectionTitle, GlassTile } from "@/components/ui/primitives"
 
 // Achievement icon mapping
 function AchievementIcon({ icon, className }: { icon: string; className?: string }) {
@@ -1010,9 +1011,7 @@ export default function AchievementsPage() {
   // Count stats
   const mintedCount = achievements.filter(a => a.status === "minted").length
   const availableCount = achievements.filter(a => a.status === "available").length
-  const totalXp = achievements
-    .filter(a => a.status === "minted")
-    .reduce((sum, a) => sum + a.repReward, 0)
+  const lockedCount = achievements.filter(a => a.status === "locked").length
 
   // Mark a batch of achievement ids as minted (called from ClaimAllModal).
   const handleClaimAllComplete = (ids: string[]) => {
@@ -1028,14 +1027,6 @@ export default function AchievementsPage() {
   const claimableAchievements = achievements.filter(
     a => a.status === "available" && !mintedAchievements.has(a.id)
   )
-
-  // Rarity breakdown
-  const rarityBreakdown = {
-    legendary: achievements.filter(a => a.status === "minted" && a.rarity === "legendary").length,
-    epic: achievements.filter(a => a.status === "minted" && a.rarity === "epic").length,
-    rare: achievements.filter(a => a.status === "minted" && a.rarity === "rare").length,
-    common: achievements.filter(a => a.status === "minted" && a.rarity === "common").length,
-  }
 
   if (!user) return null
 
@@ -1113,57 +1104,65 @@ export default function AchievementsPage() {
           </div>
         )}
 
-        {/* 1. Level & Progress */}
-        <div className="solid-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <span className="text-3xl font-bold text-foreground">LVL {user.level}</span>
-              <p className="text-sm text-muted-foreground mt-1">
-                {totalXp.toLocaleString()} XP earned
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Next level</p>
-              <p className="text-lg font-semibold text-foreground">
-                {user.xp.toLocaleString()} / {user.xpToNextLevel.toLocaleString()}
-              </p>
-            </div>
+        {/* Header — Figma 12.png + 22.png: ACHIEVEMENTS title + big REP
+            number + 3-up single-line counter tiles (Available / Minted /
+            Locked) + descriptor. Uses metallic /images/icons/* assets where
+            available; Lock falls back to lucide. */}
+        <div className="space-y-6">
+          <div className="text-center">
+            <SectionTitle>ACHIEVEMENTS</SectionTitle>
+            <p className="mt-4 font-display text-[80px] font-semibold leading-none tracking-[-0.02em] tabular-nums rep-text-gradient-leaderboard-metric rep-text-shadow-glow">
+              {user.totalRep.toLocaleString()}
+            </p>
           </div>
-          <Progress value={(user.xp / user.xpToNextLevel) * 100} className="h-3 mb-4" />
-          
-          {/* Rarity breakdown */}
-          <div className="flex flex-wrap gap-3 text-sm">
-            <span className="text-amber-400">Legendary: {rarityBreakdown.legendary}</span>
-            <span className="text-purple-400">Epic: {rarityBreakdown.epic}</span>
-            <span className="text-primary">Rare: {rarityBreakdown.rare}</span>
-            <span className="text-muted-foreground">Common: {rarityBreakdown.common}</span>
-          </div>
-        </div>
 
-        {/* Stats Summary */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="solid-card p-4 text-center">
-            <p className="text-2xl font-bold text-positive">{mintedCount}</p>
-            <p className="text-xs text-muted-foreground">Minted</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <GlassTile variant="muted" className="!p-5">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/images/icons/star-rank.png"
+                  alt=""
+                  className="h-10 w-10 object-contain flex-shrink-0"
+                />
+                <div className="flex items-baseline gap-2 min-w-0">
+                  <span className="text-sm text-ink-mute">Available</span>
+                  <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] tabular-nums rep-text-gradient-leaderboard-metric rep-text-shadow-glow">
+                    {availableCount}
+                  </span>
+                </div>
+              </div>
+            </GlassTile>
+            <GlassTile variant="muted" className="!p-5">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/images/icons/achievs.png"
+                  alt=""
+                  className="h-10 w-10 object-contain flex-shrink-0"
+                />
+                <div className="flex items-baseline gap-2 min-w-0">
+                  <span className="text-sm text-ink-mute">NFT Minted</span>
+                  <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] tabular-nums rep-text-gradient-leaderboard-metric rep-text-shadow-glow">
+                    {mintedCount}
+                  </span>
+                </div>
+              </div>
+            </GlassTile>
+            <GlassTile variant="muted" className="!p-5">
+              <div className="flex items-center gap-3">
+                <Lock className="h-10 w-10 text-ink-mute flex-shrink-0" strokeWidth={1.5} />
+                <div className="flex items-baseline gap-2 min-w-0">
+                  <span className="text-sm text-ink-mute">Locked</span>
+                  <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] tabular-nums rep-text-gradient-leaderboard-metric rep-text-shadow-glow">
+                    {lockedCount}
+                  </span>
+                </div>
+              </div>
+            </GlassTile>
           </div>
-          <div className="solid-card p-4 text-center relative">
-            {availableCount > 0 && (
-              // Dot sits in the top-right corner. Using text-primary (blue)
-              // instead of text-accent for both the number and the dot so
-              // the count stays legible on the card background — the green
-              // accent washed out against the dark card surface.
-              <span className="absolute top-2 right-2 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-              </span>
-            )}
-            <p className="text-2xl font-bold text-primary">{availableCount}</p>
-            <p className="text-xs text-muted-foreground">Available</p>
-          </div>
-          <div className="solid-card p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{achievements.length}</p>
-            <p className="text-xs text-muted-foreground">Total</p>
-          </div>
+
+          <p className="mt-6 text-center text-sm text-ink-mute">
+            Collect NFT achievements by building your on-chain and social reputation.
+          </p>
         </div>
 
         {/* 2. Filter Tabs */}

@@ -1,16 +1,10 @@
 import type { Metadata, Viewport } from "next"
-import { Space_Grotesk, JetBrains_Mono, Fraunces } from "next/font/google"
+import { JetBrains_Mono, Fraunces } from "next/font/google"
+import localFont from "next/font/local"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/lib/auth-context"
 import { AppShell } from "@/components/app-shell"
 import "./globals.css"
-
-const ffUI = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-})
 
 const ffMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -23,6 +17,17 @@ const ffSerif = Fraunces({
   subsets: ["latin"],
   style: ["normal", "italic"],
   variable: "--font-fraunces",
+  display: "swap",
+})
+
+const ffGraphik = localFont({
+  src: [
+    { path: "../fonts/graphik/GraphikLCG-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/graphik/GraphikLCG-Medium.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/graphik/GraphikLCG-Semibold.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/graphik/GraphikLCG-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-graphik",
   display: "swap",
 })
 
@@ -63,7 +68,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${ffUI.variable} ${ffMono.variable} ${ffSerif.variable}`}
+      className={`dark ${ffMono.variable} ${ffSerif.variable} ${ffGraphik.variable}`}
     >
       <body className="rep-ambient min-h-screen font-sans antialiased">
         <AuthProvider>

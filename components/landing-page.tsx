@@ -126,7 +126,7 @@ export function LandingPage() {
         >
           <Pill variant="accent" onClick={handleJoinWithX} disabled={isLoading !== null}>
             {isLoading === "x" ? (
-              <span className="h-3 w-3 animate-spin rounded-full border-2 border-[#021319]/30 border-t-[#021319]" />
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-black/30 border-t-black" />
             ) : (
               <XIcon />
             )}

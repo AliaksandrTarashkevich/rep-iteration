@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 
 import { RANK_TIERS, type RankTier } from "@/lib/auth-context"
 import { getAvatarUrl } from "@/lib/avatars"
+import { SectionTitle } from "@/components/ui/primitives"
 
 // Rank tier styling
 const rankStyles: Record<RankTier, { color: string; glow: string }> = {
@@ -308,11 +309,11 @@ export function ReferralNetwork() {
   const displayedReferrals = showAll ? mockReferrals : mockReferrals.slice(0, 3)
   
   return (
-    <div className="solid-card p-6 card-glow-top">
+    <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="section-title text-xl">REFERRAL NETWORK</h2>
+          <SectionTitle className="text-xl">REFERRAL NETWORK</SectionTitle>
           <p className="text-xs text-muted-foreground mt-1">
             Your network (3 generations deep)
           </p>

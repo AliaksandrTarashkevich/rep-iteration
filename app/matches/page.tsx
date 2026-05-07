@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Award, MapPin, ShoppingBag, Users } from "lucide-react"
 import { PageShell } from "@/components/ui/page-shell"
 import {
-  Tile,
+  GlassTile,
   Pill,
   Num,
 } from "@/components/ui/primitives"
@@ -158,7 +158,7 @@ export default function MatchesPage() {
         {visible.map((m) => {
           const Icon = KIND_ICON[m.kind]
           return (
-            <Tile key={m.id} className="!p-5">
+            <GlassTile key={m.id} variant="muted" interactive className="!p-5">
               <div className="flex items-start gap-4">
                 {/* Avatar / icon — identicon for people, square icon for others */}
                 {m.kind === "people" ? (
@@ -200,18 +200,18 @@ export default function MatchesPage() {
                   </div>
                 </div>
               </div>
-            </Tile>
+            </GlassTile>
           )
         })}
       </div>
 
       {visible.length === 0 && (
-        <Tile className="!p-12 text-center">
+        <GlassTile variant="muted" className="!p-12 text-center">
           <FilterIcon size={32} />
           <div className="mt-4 text-[18px] text-ink-mute">
             No {filter} matches yet — keep growing your REP.
           </div>
-        </Tile>
+        </GlassTile>
       )}
     </PageShell>
   )

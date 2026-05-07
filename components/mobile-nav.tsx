@@ -59,7 +59,7 @@ export function MobileNav() {
                   <span
                     className={cn(
                       "absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-medium text-white",
-                      achievementBadgeIsUnseen ? "bg-bad" : "bg-accent text-[#021319]",
+                      achievementBadgeIsUnseen ? "bg-bad" : "bg-accent text-black",
                     )}
                     aria-label={
                       achievementBadgeIsUnseen

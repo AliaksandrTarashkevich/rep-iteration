@@ -1,32 +1,47 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* REP Tokens — mirrors rep-web-next. Single source of truth. */
+/* REP design system from @dancingteeth/rep-design — foundations + primitives + components.
+   The package's shadcn-v0 bridge is loaded BEFORE our local :root overrides below,
+   so package values populate semantic tokens (--card, --popover, --radius, etc.) and
+   our subsequent :root block then overrides the ones we explicitly customize for the
+   prototype's existing visual design. Variables we don't redefine fall through to the
+   package's mapping (e.g. --card → charcoal palette, --radius → 0.75rem). */
+@import '@dancingteeth/rep-design/rep-design-system.css';
+@import '@dancingteeth/rep-design/rep-primitives.css';
+@import '@dancingteeth/rep-design/rep-components.css';
+@import '@dancingteeth/rep-design/rep-shadcn-v0-bridge.css';
+
+/* Tailwind v4 must scan the package src/ for @utility classes (rep-surface-glass,
+   rep-cmp-leaderboard-*, rep-text-gradient-*, rep-type-*, etc.). */
+@source '../node_modules/@dancingteeth/rep-design/src';
+
+/* REP Tokens — bound to @dancingteeth/rep-design where the package has a canonical
+   value, with prototype-specific extensions (alpha-based ink-mute, gold accent, etc.)
+   layered on top. */
 :root {
-  /* Brand */
-  --bg: #010101;
+  /* Brand — bound to package: --color-rep-bg / --color-rep-foreground / --color-rep-cyan
+     (and the cyanshift palette + state-selected layer for accent ramps). */
+  --bg: var(--color-rep-bg);
   --bg-2: #0a0a0a;
-  --ink: #ffffff;
+  --ink: var(--color-rep-foreground);
   --ink-mute: rgba(255, 255, 255, 0.68);
   --ink-faint: rgba(255, 255, 255, 0.50);
   --line: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.18);
   --card-bg: rgba(255, 255, 255, 0.04);
   --card-bg-2: rgba(255, 255, 255, 0.06);
-  --pill-bg: #181818;
-  --pill-line: rgba(255, 255, 255, 0.7);
 
-  /* Accent */
-  --accent: #8CD5FE;
-  --accent-deep: #5CC3FF;
-  --accent-dim: rgba(140, 213, 254, 0.18);
+  --accent: var(--color-rep-cyan);
+  --accent-deep: var(--color-rep-palette-cyanshift-start);
+  --accent-dim: var(--color-rep-state-selected);
   --gold: #E6B450;
   --gold-dim: rgba(230, 180, 80, 0.16);
 
-  /* Semantic */
-  --ok: #7DD3A5;
-  --warn: #E8A259;
-  --bad: #E86A6A;
+  /* Semantic — bound to package validation palette (mint / mustard / terracotta). */
+  --ok: var(--color-rep-success);
+  --warn: var(--color-rep-warning);
+  --bad: var(--color-rep-error);
 
   /* Category */
   --cat-green: #7DD3A5;
@@ -35,10 +50,13 @@
   --cat-purple: #B99BFF;
   --cat-red: #FF6B6B;
 
-  /* Typography (filled by next/font/google variables in layout.tsx) */
-  --ff-ui: var(--font-space-grotesk), system-ui, sans-serif;
+  /* Typography — Graphik LCG is the canonical UI face (per
+     @dancingteeth/rep-design AGENTS.md). Mono = JetBrains, italic accent = Fraunces. */
+  --ff-ui: var(--font-graphik), "Graphik LCG", "Graphik", ui-sans-serif, system-ui, sans-serif;
   --ff-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
   --ff-serif: var(--font-fraunces), Georgia, serif;
+  /* Alias kept for any call-site still referencing --ff-display; resolves to --ff-ui. */
+  --ff-display: var(--ff-ui);
 
   /* Spacing / radius / elevation */
   --s1: 8px;
@@ -52,7 +70,7 @@
   --radius-sm: 12px;
   --radius-md: 14px;
   --radius-pill: 85px;
-  --glow-accent: 0 0 40px rgba(140, 213, 254, 0.20);
+  --glow-accent: 0 0 40px rgba(99, 193, 230, 0.20);
   --emboss: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
   /* ── Shadcn bridge — REP tokens mapped to shadcn var names so existing
@@ -92,6 +110,7 @@
   --font-sans: var(--ff-ui);
   --font-mono: var(--ff-mono);
   --font-serif: var(--ff-serif);
+  --font-display: var(--ff-display);
 
   /* REP color tokens (bg-accent, text-ink, border-line, etc.) */
   --color-bg: var(--bg);
@@ -103,8 +122,6 @@
   --color-line-strong: var(--line-strong);
   --color-card-bg: var(--card-bg);
   --color-card-bg-2: var(--card-bg-2);
-  --color-pill-bg: var(--pill-bg);
-  --color-pill-line: var(--pill-line);
   --color-accent: var(--accent);
   --color-accent-deep: var(--accent-deep);
   --color-accent-dim: var(--accent-dim);
@@ -195,11 +212,93 @@
 .story-grid-bg {
   background-color: var(--bg);
   background-image:
-    radial-gradient(ellipse at 50% 30%, rgba(140, 213, 254, 0.10), transparent 55%),
+    radial-gradient(ellipse at 50% 30%, rgba(99, 193, 230, 0.10), transparent 55%),
     linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
   background-size: 100% 100%, 32px 32px, 32px 32px;
   background-position: center top, 0 0, 0 0;
+}
+
+/* ── Reusable glass-stroke rings — extracted from
+   `rep-cmp-leaderboard-summary-card` / `rep-cmp-leaderboard-header-strip`
+   so the same `::before` mask trick can wrap any sized container.
+   Compose on top of `rep-surface-glass-blur` (or any rounded surface).
+   `bright`  — high-contrast lit-edge for stat tiles & summary panels.
+   `muted`   — softer ring for list/achievement cards.
+   `accent`  — cyan-forward ring for hover/selected affordance.
+   Uses package gradients (--gradient-rep-glass-stroke-bright/-muted) so
+   future palette changes flow through without touching call-sites. */
+@utility rep-glass-stroke-bright {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--gradient-rep-glass-stroke-bright);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+@utility rep-glass-stroke-muted {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--gradient-rep-glass-stroke-muted);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+/* Section title gradient — exact Figma spec
+   (Graphik Semibold 24, line-height 100%, letter-spacing 0,
+   linear-gradient 103.55deg #63C1E6 3.99% → #FFFFFF 90.27%).
+   Differs from the package's `rep-text-gradient-leaderboard-title`
+   (180deg) which produced a top-down fade; this matches the
+   left-to-right cyan→white look from the latest design board. */
+@utility rep-section-title-gradient {
+  background-image: linear-gradient(103.55deg, #63c1e6 3.99%, #ffffff 90.27%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Soft glow under big numbers / metric values — emulates the
+   "lit-from-above glass reflection" feel from the Figma board where the
+   numerals appear to float on top of the glass surface. Pairs naturally
+   with `rep-text-gradient-leaderboard-metric` / `-value` / `rep-section-title-gradient`. */
+@utility rep-text-shadow-glow {
+  text-shadow:
+    0 0 16px rgba(255, 255, 255, 0.18),
+    0 0 8px rgba(99, 193, 230, 0.35);
+}
+
+@utility rep-glass-hover-glow {
+  cursor: pointer;
+  transition: box-shadow var(--duration-rep-base, 180ms) var(--ease-rep-standard, cubic-bezier(0.4, 0, 0.2, 1));
+  &:hover {
+    box-shadow:
+      0 0 24px rgba(99, 193, 230, 0.35),
+      inset 0 0 0 1px rgba(99, 193, 230, 0.45);
+  }
 }
 
 /* ── Primitives — port from rep-web-next ── */
@@ -254,45 +353,17 @@
   }
   .tile--accent {
     background: var(--accent-dim);
-    border-color: rgba(140, 213, 254, 0.30);
+    border-color: rgba(99, 193, 230, 0.30);
   }
 
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: 36px;
-    padding: 0 18px;
-    background: var(--pill-bg);
-    border: 1px solid var(--pill-line);
-    border-radius: var(--radius-pill);
-    color: var(--ink);
-    font-family: var(--ff-ui);
-    font-weight: 500;
-    font-size: 12.5px;
-    line-height: 1;
-    cursor: pointer;
-    transition: opacity 0.16s ease;
-  }
-  .pill:hover {
-    opacity: 0.85;
-  }
-  .pill--ghost {
-    background: transparent;
-    border-color: var(--line-strong);
-  }
-  .pill--accent {
-    background: var(--accent);
-    color: #021319;
-    border-color: var(--accent);
-    font-weight: 600;
-  }
-  .pill--sm {
-    height: 28px;
-    padding: 0 12px;
-    font-size: 11px;
-  }
+  /* GlassTile now uses the canonical `rep-surface-glass-blur` utility from
+     @dancingteeth/rep-design (defined in rep-design-system.css). The previous
+     local `.glass-tile` + `::before` ring was removed; if we need the
+     gradient-stroke "lit-from-above" treatment back, layer it via a wrapping
+     class or extend the package utility there. */
+
+  /* `.pill` was migrated to `rep-btn` (see components/ui/primitives.tsx).
+     The button styling now lives in @dancingteeth/rep-design's rep-primitives.css. */
 
   .chip {
     display: inline-flex;
@@ -309,8 +380,8 @@
     letter-spacing: 0.06em;
   }
   .chip--accent {
-    background: rgba(140, 213, 254, 0.08);
-    border-color: rgba(140, 213, 254, 0.25);
+    background: rgba(99, 193, 230, 0.08);
+    border-color: rgba(99, 193, 230, 0.25);
     color: var(--accent);
   }
 

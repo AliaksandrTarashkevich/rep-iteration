@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { ChevronDown, ChevronUp, Copy, Check, Share2, User, X } from "lucide-react"
 import { getAvatarUrl } from "@/lib/avatars"
+import { SectionTitle } from "@/components/ui/primitives"
 
 // ============================================================================
 // SOCIAL GRAPH — tier list card
@@ -102,7 +103,7 @@ function HowItWorksModal({ onClose }: { onClose: () => void }) {
       aria-label="How the social graph works"
     >
       <div
-        className="relative w-full max-w-md solid-card p-6 animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-md rep-surface-glass-blur rep-glass-stroke-bright p-6 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -113,7 +114,7 @@ function HowItWorksModal({ onClose }: { onClose: () => void }) {
           <X className="h-4 w-4" />
         </button>
 
-        <h2 className="section-title text-lg text-center mb-1">HOW IT WORKS</h2>
+        <SectionTitle className="text-lg text-center mb-1">HOW IT WORKS</SectionTitle>
         <p className="text-xs text-muted-foreground text-center mb-5">
           REP flows up the network to you
         </p>
@@ -288,7 +289,7 @@ export function YourNetworkCard({
 
   return (
     <>
-      <div className="solid-card p-5 md:p-6 relative card-glow-top">
+      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-5 md:p-6 relative">
         {/* "How it works?" link — top right corner */}
         <button
           onClick={() => setHowOpen(true)}
@@ -300,9 +301,9 @@ export function YourNetworkCard({
         </button>
 
         {/* Title */}
-        <h3 className="section-title text-base md:text-lg text-center mb-6">
+        <SectionTitle as="h3" className="text-base md:text-lg text-center mb-6">
           SOCIAL GRAPH
-        </h3>
+        </SectionTitle>
 
         {/* Big stats: Total connections (left) · Total REP (right) */}
         <div className="flex items-start justify-between mb-8 px-2">

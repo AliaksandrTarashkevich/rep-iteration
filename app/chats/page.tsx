@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  EcosystemIcon, 
-  ZapBolt, 
+import { Waves, Zap, Hexagon, Triangle, MessageCircle } from "lucide-react"
+import {
+  EcosystemIcon,
+  ZapBolt,
   Sparkle,
   Check as CheckIcon,
   ChevronDown,
@@ -31,7 +32,7 @@ import {
 } from "@/components/chat-rule-builder"
 import { AchievementCatalog } from "@/components/achievement-catalog"
 import { PageShell } from "@/components/ui/page-shell"
-import { Pill, Num, MonoCap } from "@/components/ui/primitives"
+import { Pill, Num, MonoCap, SectionTitle, GlassTile } from "@/components/ui/primitives"
 
 // Ecosystem types - includes BNB (6 ecosystems per spec)
 type Ecosystem = "all" | "polymarket" | "hyperliquid" | "solana" | "ethereum" | "base" | "bnb"
@@ -557,6 +558,18 @@ function formatCompact(n: number): string {
   return n.toLocaleString()
 }
 
+// Placeholder chat icon — picks a lucide glyph from keywords in the chat
+// name. Real chats will eventually carry their own image/icon field; until
+// then this gives every card a stable, themed visual anchor on the left.
+function getChatPlaceholderIcon(name: string) {
+  const n = name.toLowerCase()
+  if (n.includes("whale") || n.includes("defi")) return Waves
+  if (n.includes("hyperliquid") || n.includes("hl ")) return Zap
+  if (n.includes("base")) return Hexagon
+  if (n.includes("polymarket") || n.includes("market") || n.includes("oracle")) return Triangle
+  return MessageCircle
+}
+
 function ChatCard({
   chat,
   isAuthenticated,
@@ -566,6 +579,7 @@ function ChatCard({
 }) {
   const memberAvatars = getTopMemberAvatars(chat.id)
   const { avg, total } = getChatRepStats(chat)
+  const PlaceholderIcon = getChatPlaceholderIcon(chat.name)
 
   // Up to 2 requirement pills so the bottom stays compact; the rest collapses
   // into a "+N" chip.
@@ -574,23 +588,32 @@ function ChatCard({
 
   return (
     <Link href={`/chats/${chat.slug}`} className="block group">
-      <div className="bg-card border border-border rounded-2xl p-4 hover:border-primary/40 transition-all cursor-pointer h-full flex flex-col">
-        {/* Top row: Chat name + creator */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors leading-tight min-w-0">
-            {chat.name}
-          </h3>
-          <div className="flex items-center gap-1.5 flex-shrink-0 pt-0.5">
-            <span className="text-[10px] text-muted-foreground">Made by</span>
-            <div className="flex items-center gap-1.5">
-              <img
-                src={getCreatorAvatar(chat.creator.handle) || "/placeholder.svg"}
-                alt={`@${chat.creator.handle}`}
-                className="h-5 w-5 rounded-full object-cover ring-1 ring-border"
-              />
-              <span className="text-[11px] font-medium text-foreground">
-                @{chat.creator.handle}
-              </span>
+      <GlassTile
+        variant="muted"
+        interactive
+        className="!p-4 h-full flex flex-col"
+      >
+        {/* Top row: placeholder icon + chat name + creator */}
+        <div className="flex items-start gap-3 mb-3">
+          <div className="h-14 w-14 flex-shrink-0 rounded-[14px] bg-card-bg-2 border border-line flex items-center justify-center text-ink-mute group-hover:text-primary transition-colors">
+            <PlaceholderIcon className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0 flex items-start justify-between gap-3">
+            <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors leading-tight min-w-0">
+              {chat.name}
+            </h3>
+            <div className="flex items-center gap-1.5 flex-shrink-0 pt-0.5">
+              <span className="text-[10px] text-muted-foreground">Made by</span>
+              <div className="flex items-center gap-1.5">
+                <img
+                  src={getCreatorAvatar(chat.creator.handle) || "/placeholder.svg"}
+                  alt={`@${chat.creator.handle}`}
+                  className="h-5 w-5 rounded-full object-cover ring-1 ring-border"
+                />
+                <span className="text-[11px] font-medium text-foreground">
+                  @{chat.creator.handle}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -667,7 +690,7 @@ function ChatCard({
           )}
         </div>
 
-      </div>
+      </GlassTile>
     </Link>
   )
 }
@@ -1213,7 +1236,7 @@ export default function ChatsPage() {
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Sparkle className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold text-foreground">Your chats</h2>
+              <SectionTitle className="text-lg">Your chats</SectionTitle>
               <span className="text-sm text-muted-foreground">({userCreatedChats.length})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1287,7 +1310,7 @@ export default function ChatsPage() {
           {/* Trending by signal */}
           <section className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-lg font-bold text-foreground">Trending by signal</h2>
+              <SectionTitle className="text-lg">Trending by signal</SectionTitle>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Rooms ranked by quality density and conversation energy
@@ -1302,7 +1325,7 @@ export default function ChatsPage() {
           {/* Global Prestige */}
           <section className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-lg font-bold text-foreground">Global Prestige</h2>
+              <SectionTitle className="text-lg">Global Prestige</SectionTitle>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Top 1% operators across ecosystems
@@ -1321,7 +1344,7 @@ export default function ChatsPage() {
           <section className="mb-8">
             <div className="flex items-center gap-2 mb-2">
               <EcosystemIcon ecosystem="polymarket" className="h-5 w-5 text-blue-400" />
-              <h2 className="text-lg font-bold text-foreground">Polymarket Elite</h2>
+              <SectionTitle className="text-lg">Polymarket Elite</SectionTitle>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Top prediction market traders
@@ -1359,7 +1382,7 @@ export default function ChatsPage() {
                 <section>
                   <div className="flex items-center gap-2 mb-4">
                     <CheckIcon className="h-5 w-5 text-positive" />
-                    <h2 className="text-lg font-semibold text-foreground">Available to you</h2>
+                    <SectionTitle className="text-lg">Available to you</SectionTitle>
                     <span className="text-sm text-muted-foreground">({availableChats.length})</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1374,7 +1397,7 @@ export default function ChatsPage() {
                 <section>
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkle className="h-5 w-5 text-warning" />
-                    <h2 className="text-lg font-semibold text-foreground">Almost unlocked</h2>
+                    <SectionTitle className="text-lg">Almost unlocked</SectionTitle>
                     <span className="text-sm text-muted-foreground">({almostUnlockedChats.length})</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1392,7 +1415,7 @@ export default function ChatsPage() {
                       <rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor" fillOpacity="0.1"/>
                       <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round"/>
                     </svg>
-                    <h2 className="text-lg font-semibold text-foreground">Explore more</h2>
+                    <SectionTitle className="text-lg">Explore more</SectionTitle>
                     <span className="text-sm text-muted-foreground">({lockedChats.length})</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

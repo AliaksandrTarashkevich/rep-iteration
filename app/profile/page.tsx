@@ -42,7 +42,7 @@ import { ConnectedAccounts } from "@/components/connected-accounts"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { PageShell } from "@/components/ui/page-shell"
-import { Tile, Pill, Num, MonoCap } from "@/components/ui/primitives"
+import { Tile, GlassTile, Pill, Num, MonoCap, SectionTitle } from "@/components/ui/primitives"
 
 import { RANK_TIERS, type RankTier } from "@/lib/auth-context"
 
@@ -356,8 +356,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* AI one-liner — Fraunces italic in a Tile */}
-        <Tile className="!p-5">
+        {/* AI one-liner — Fraunces italic in a glass tile */}
+        <GlassTile className="!p-5">
           <div className="flex items-start gap-3">
             <Sparkles
               className="h-4 w-4 flex-shrink-0 text-accent mt-0.5"
@@ -367,55 +367,65 @@ export default function ProfilePage() {
               &ldquo;{user.aiOneLiner}&rdquo;
             </p>
           </div>
-        </Tile>
+        </GlassTile>
 
-        {/* 4-up M1 stat tiles */}
+        {/* 4-up M1 stat tiles — REP glass with bright stroke ring */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Tile className="!p-4">
+          <GlassTile variant="bright" className="!p-4">
             <MonoCap size="sm">REP</MonoCap>
             <div className="mt-2">
-              <Num className="text-[28px] leading-none tracking-[-0.02em] text-ink">
+              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
                 {user.totalRep.toLocaleString()}
-              </Num>
+              </span>
             </div>
-          </Tile>
+          </GlassTile>
           <Link href="/leaderboard" className="contents">
-            <Tile className="!p-4 cursor-pointer transition-colors hover:bg-card-bg-2">
+            <GlassTile variant="bright" interactive className="!p-4">
               <MonoCap size="sm">RANK</MonoCap>
-              <div className="mt-2">
-                <Num className="text-[28px] leading-none tracking-[-0.02em] text-ink">
-                  #{user.rank}
-                </Num>
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="font-display text-[20px] font-medium leading-none text-ink-mute">#</span>
+                <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-accent tabular-nums rep-text-shadow-glow">
+                  {user.rank}
+                </span>
               </div>
-            </Tile>
+            </GlassTile>
           </Link>
-          <Tile className="!p-4">
+          <GlassTile variant="bright" className="!p-4">
             <MonoCap size="sm">SMART</MonoCap>
             <div className="mt-2">
-              <Num className="text-[28px] leading-none tracking-[-0.02em] text-ink">
+              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
                 {(user.metrics.smartFollowers || 0).toLocaleString()}
-              </Num>
+              </span>
             </div>
-          </Tile>
-          <Tile className="!p-4">
+          </GlassTile>
+          <GlassTile variant="bright" className="!p-4">
             <MonoCap size="sm">ACHIEV.</MonoCap>
             <div className="mt-2">
-              <Num className="text-[28px] leading-none tracking-[-0.02em] text-ink">
+              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
                 {earnedAchievements.length}
-              </Num>
+              </span>
             </div>
-          </Tile>
+          </GlassTile>
         </div>
 
         {/* Action pill row */}
         <div className="flex flex-wrap gap-3">
-          <Link href="/leaderboard" className="pill pill--ghost">
+          <Link
+            href="/leaderboard"
+            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring"
+          >
             Grow your REP
           </Link>
-          <Link href="/stories" className="pill pill--ghost">
+          <Link
+            href="/stories"
+            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring"
+          >
             Stories
           </Link>
-          <button onClick={handleShare} className="pill pill--ghost md:hidden">
+          <button
+            onClick={handleShare}
+            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring md:hidden"
+          >
             <Share2 size={12} />
             Share
           </button>
@@ -430,13 +440,10 @@ export default function ProfilePage() {
           chat they haven't joined yet, a "new chat available" pill shows
           on the section header. Whole card is clickable → chat detail. */}
       {accessibleChats.length > 0 ? (
-        <div className="solid-card p-6">
-          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-primary" />
-                Your chats
-              </h2>
+        <div className="rep-surface-glass-blur rep-glass-stroke-muted p-6">
+          <div className="flex flex-col items-center text-center mb-4 gap-2">
+            <SectionTitle className="text-lg">Your chats</SectionTitle>
+            <div className="flex items-center gap-2 flex-wrap justify-center">
               {/* New chat available pill — shows when the user qualifies for
                   rooms beyond the 3 we preview. */}
               {accessibleChats.length > 3 && (
@@ -516,7 +523,7 @@ export default function ProfilePage() {
           </div>
         </div>
       ) : nextReachableLockedChat ? (
-        <div className="solid-card p-6">
+        <div className="rep-surface-glass-blur rep-glass-stroke-muted p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-primary" />
@@ -570,15 +577,10 @@ export default function ProfilePage() {
           not connected. Compound tasks show "X of Y done" progress.
           Max 4 cards visible at once to keep it un-overwhelming.
           ================================================================= */}
-      <div className="solid-card p-6 border-primary/30">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 rounded-lg bg-primary/15">
-            <Zap className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">What to do next</h2>
-            <p className="text-xs text-muted-foreground">Quests to grow your REP</p>
-          </div>
+      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
+        <div className="text-center mb-4">
+          <SectionTitle className="text-lg">What to do next</SectionTitle>
+          <p className="mt-1 text-xs text-muted-foreground">Quests to grow your REP</p>
         </div>
 
         {(() => {
@@ -601,7 +603,7 @@ export default function ProfilePage() {
           if (!hasEmail) {
             tasks.push({
               key: "email",
-              icon: <Mail className="h-4 w-4" />,
+              icon: <Mail className="h-5 w-5" />,
               title: "Add your email",
               description: "Get notified about new achievements and rewards",
               repReward: 30,
@@ -624,7 +626,7 @@ export default function ProfilePage() {
           if (!hasTwitter) {
             tasks.push({
               key: "x",
-              icon: <Twitter className="h-4 w-4" />,
+              icon: <Twitter className="h-5 w-5" />,
               title: "Connect X",
               description: "Unlock social reputation and notable followers",
               repReward: 35,
@@ -634,7 +636,7 @@ export default function ProfilePage() {
           if (!hasWallet) {
             tasks.push({
               key: "wallet",
-              icon: <Wallet className="h-4 w-4" />,
+              icon: <Wallet className="h-5 w-5" />,
               title: "Connect wallet",
               description: "Surface your onchain track record",
               repReward: 35,
@@ -649,7 +651,13 @@ export default function ProfilePage() {
             const target = Math.min(3, availableAchs.length)
             tasks.push({
               key: "claim-achievements",
-              icon: <Award className="h-4 w-4" />,
+              icon: (
+                <img
+                  src="/images/icons/achievs.png"
+                  alt=""
+                  className="h-6 w-6 object-contain"
+                />
+              ),
               title: `Claim ${target} achievements`,
               description: "Mint your earned proofs as NFTs",
               repReward: availableAchs
@@ -662,7 +670,7 @@ export default function ProfilePage() {
 
           tasks.push({
             key: "create-chat",
-            icon: <Plus className="h-4 w-4" />,
+            icon: <Plus className="h-5 w-5" />,
             title: "Create a chat",
             description: "Start your own gated community around your proofs",
             repReward: 100,
@@ -677,7 +685,7 @@ export default function ProfilePage() {
               {visible.map((task) => {
                 const Body = (
                   <div className="flex items-start gap-3 p-3 rounded-xl bg-background/50 border border-border hover:border-primary/40 transition-colors">
-                    <div className="flex-shrink-0 h-9 w-9 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center text-primary">
+                    <div className="flex-shrink-0 h-11 w-11 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_12px_rgba(99,193,230,0.15)]">
                       {task.icon}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -731,10 +739,10 @@ export default function ProfilePage() {
       </div>
 
       {/* Achievements Preview - Big Blocks */}
-      <div className="solid-card p-6 card-glow-top">
+      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <h2 className="section-title text-xl">ACHIEVEMENTS</h2>
+            <SectionTitle className="text-xl">ACHIEVEMENTS</SectionTitle>
             {achievementBadgeCount > 0 && (
               <span
                 // Medium weight + explicit white so the count stays clean
@@ -816,16 +824,26 @@ export default function ProfilePage() {
       </div>
 
       {/* Leaderboard Position */}
-      <div className="solid-card p-6 card-glow-top">
+      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
         <div className="text-center mb-6">
-          <h2 className="section-title text-xl">LEADERBOARDS</h2>
+          <SectionTitle className="text-xl">LEADERBOARDS</SectionTitle>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        {/* Mirrors /leaderboard column structure: Total / Social Graph /
+            Onchain / Social. Mock numbers for the 3 secondary ranks until
+            wired to real data. */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
           <div className="text-center">
             <p className="text-xs text-muted-foreground">Total:</p>
             <p className="text-2xl font-bold">
               <span className="text-primary">#</span>{user.rank}
+              <span className="text-sm text-muted-foreground">/{user.totalUsers}</span>
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Social Graph:</p>
+            <p className="text-2xl font-bold">
+              <span className="text-primary">#</span>5
               <span className="text-sm text-muted-foreground">/{user.totalUsers}</span>
             </p>
           </div>
@@ -867,7 +885,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Connect More - Growth CTA */}
-      <div className="solid-card p-6 border-primary/20">
+      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Link2 className="h-5 w-5 text-primary" />

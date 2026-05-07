@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Check, Copy, Share2 } from "lucide-react"
 import { PageShell } from "@/components/ui/page-shell"
 import {
-  Tile,
+  GlassTile,
   Pill,
   Num,
   MonoCap,
@@ -51,7 +51,7 @@ export default function NetworkPage() {
     >
       {/* TOTAL + YOUR CUT 2-up grid */}
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Tile className="!p-6">
+        <GlassTile variant="bright" className="!p-6">
           <MonoCap size="sm">TOTAL</MonoCap>
           <div className="mt-3 flex items-baseline gap-2">
             <Num className="text-[56px] leading-none tracking-[-0.02em] text-ink md:text-[64px]">
@@ -64,9 +64,9 @@ export default function NetworkPage() {
               this week
             </span>
           </div>
-        </Tile>
+        </GlassTile>
 
-        <Tile className="!p-6">
+        <GlassTile variant="bright" className="!p-6">
           <MonoCap size="sm">YOUR CUT</MonoCap>
           <div className="mt-3 flex items-baseline gap-2">
             <Num className="text-[56px] leading-none tracking-[-0.02em] text-accent md:text-[64px]">
@@ -76,7 +76,7 @@ export default function NetworkPage() {
           <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             REP earned
           </div>
-        </Tile>
+        </GlassTile>
       </div>
 
       {/* BY TIER */}
@@ -84,7 +84,7 @@ export default function NetworkPage() {
         <MonoCap>BY TIER</MonoCap>
       </div>
 
-      <Tile className="!p-6 mb-8">
+      <GlassTile variant="muted" className="!p-6 mb-8">
         <div className="space-y-6">
           {TIERS.map((t) => (
             <div key={t.rank}>
@@ -109,10 +109,10 @@ export default function NetworkPage() {
             </div>
           ))}
         </div>
-      </Tile>
+      </GlassTile>
 
       {/* YOUR CODE */}
-      <Tile className="!p-6">
+      <GlassTile variant="bright" className="!p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <MonoCap size="sm">YOUR CODE</MonoCap>
@@ -136,7 +136,7 @@ export default function NetworkPage() {
             </Pill>
           </div>
         </div>
-      </Tile>
+      </GlassTile>
 
       <div className="mt-8 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         The compounding machine. Every invite grows the graph; every earn tier

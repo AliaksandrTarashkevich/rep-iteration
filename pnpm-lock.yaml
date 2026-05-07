@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@dancingteeth/rep-design':
+        specifier: ^0.6.0
+        version: 0.6.0(tailwindcss@4.2.0)
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.10.0(react-hook-form@7.71.1(react@19.2.4))
@@ -190,6 +193,14 @@ packages:
   '@babel/runtime@7.28.6':
     resolution: {integrity: sha512-05WQkdpL9COIMz4LjTxGpPNCdlpyimKppYNoJ5Di5EUObifl8t4tuLuUBBZEpoLYOmfvIWrsp9fCl0HoPRVTdA==}
     engines: {node: '>=6.9.0'}
+
+  '@dancingteeth/rep-design@0.6.0':
+    resolution: {integrity: sha512-X4nVXQ2e8AmYSRrLdYfjMwpJiPGPfrxpOi3ZR3M7VuANfxaIi3oYpdV29kADRPzFmtl2ktDT4NUpkEI+i4/pUg==}
+    peerDependencies:
+      tailwindcss: '>=4.0.0'
+    peerDependenciesMeta:
+      tailwindcss:
+        optional: true
 
   '@date-fns/tz@1.4.1':
     resolution: {integrity: sha512-P5LUNhtbj6YfI3iJjw5EL9eUAG6OitD0W3fWQcpQjDRc/QIsL0tRNuO1PcDvPccWL1fSTXXdE1ds+l95DV/OFA==}
@@ -1759,6 +1770,10 @@ snapshots:
   '@alloc/quick-lru@5.2.0': {}
 
   '@babel/runtime@7.28.6': {}
+
+  '@dancingteeth/rep-design@0.6.0(tailwindcss@4.2.0)':
+    optionalDependencies:
+      tailwindcss: 4.2.0
 
   '@date-fns/tz@1.4.1': {}
 

@@ -10,6 +10,7 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { getAvatarUrl } from "@/lib/avatars"
 import { PageShell } from "@/components/ui/page-shell"
+import { SectionTitle } from "@/components/ui/primitives"
 
 // ============================================================================
 // LEADERBOARD — Total / Social Graph / Activity
@@ -39,15 +40,20 @@ const rankBadges: Record<string, string> = {
   "pilgrim": "/images/ranks/star.jpg",
 }
 
+// Avatar ring color per rank tier — uses --color-rep-avatar-ring-* tokens
+// from @dancingteeth/rep-design (Figma source-of-truth palette).
 const rankRingColors: Record<string, string> = {
-  "ꙮ": "ring-amber-400",
-  "yo": "ring-primary",
-  "ToT": "ring-emerald-400",
-  "roko": "ring-purple-400",
-  "droog": "ring-sky-400",
-  "cicada": "ring-muted-foreground",
-  "pilgrim": "ring-muted-foreground",
+  "ꙮ": "ring-[var(--color-rep-avatar-ring-gold)]",
+  "yo": "ring-[var(--color-rep-avatar-ring-blue)]",
+  "ToT": "ring-[var(--color-rep-avatar-ring-pale)]",
+  "roko": "ring-[var(--color-rep-avatar-ring-purple)]",
+  "droog": "ring-[var(--color-rep-avatar-ring-orange)]",
+  "cicada": "ring-[var(--color-rep-avatar-ring-green)]",
+  "pilgrim": "ring-[var(--color-rep-avatar-ring-lime)]",
 }
+
+// REP-style number format — Figma uses space-separated thousands ("1 847", "30 217")
+const fmt = (n: number) => n.toLocaleString("ru-RU").replace(/ /g, " ")
 
 interface LeaderboardUser {
   handle: string
@@ -238,27 +244,42 @@ function LeaderboardHeroBanner({
   const activeId = statsKey
 
   return (
-    <div className="solid-card overflow-hidden">
-      {/* Title */}
-      <div className="pt-5 pb-3 text-center">
-        <h2 className="section-title text-lg tracking-[0.15em]">LEADERBOARDS</h2>
+    <div className="rep-cmp-leaderboard-summary-card">
+      {/* Title — Figma 21631:2288, Graphik semibold 24 uppercase, gradient text.
+          Uses shared <SectionTitle> primitive (rep-section-title-gradient =
+          103.55deg cyan→white, letter-spacing 0, line-height 100%). */}
+      <div className="text-center">
+        <SectionTitle>LEADERBOARDS</SectionTitle>
       </div>
 
-      {/* 4-column rank overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 px-4 pb-4">
+      {/* 4-column rank overview — Figma 21631-2233 spec:
+          Label is "Total:" sentence-case + colon (NOT uppercase),
+          big Graphik value, small "/total", green trend arrow next to denominator. */}
+      <div className="rep-cmp-leaderboard-status-grid mt-[var(--spacing-rep-summary-status-top)]">
         {rankColumns.map((col) => {
           const isActive = col.id === activeId
           return (
-            <div key={col.id} className={`text-center transition-opacity ${isActive ? "" : "opacity-60"}`}>
-              <p className={`text-[10px] uppercase tracking-wider mb-1 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-                {col.label}
+            <div
+              key={col.id}
+              className={`rep-cmp-leaderboard-status-item transition-opacity ${isActive ? "" : "opacity-55"}`}
+            >
+              <p className={`font-display text-[14px] leading-tight ${isActive ? "text-ink" : "text-muted-foreground"}`}>
+                {col.label}:
               </p>
-              <div className="flex items-baseline justify-center flex-wrap">
-                <span className={`text-2xl md:text-3xl font-bold tracking-tight ${isActive ? "text-primary" : "metallic-text-silver"}`}>
-                  #{col.rank}
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={`font-display font-semibold leading-none tracking-tight tabular-nums rep-text-shadow-glow ${
+                    isActive ? "rep-text-gradient-leaderboard-metric" : "text-ink"
+                  }`}
+                  style={{ fontSize: "var(--size-rep-metric-value, 40px)" }}
+                >
+                  {col.rank}
                 </span>
-                <span className="text-muted-foreground text-xs font-mono ml-0.5">
-                  /{col.totalUsers}
+                <span
+                  className="text-muted-foreground font-display tabular-nums"
+                  style={{ fontSize: "var(--size-rep-metric-total, 12px)" }}
+                >
+                  /{fmt(col.totalUsers)}
                 </span>
               </div>
             </div>
@@ -267,15 +288,15 @@ function LeaderboardHeroBanner({
       </div>
 
       {/* Progress bar + tier labels */}
-      <div className="px-5 pb-5">
-        <div className="flex items-center justify-between mb-1.5">
+      <div className="mt-[var(--spacing-rep-summary-progress-top)]">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] text-muted-foreground font-medium">{currentTier}</span>
-          <span className="text-[11px] text-foreground font-medium font-mono">
+          <span className="text-[11px] text-foreground font-medium font-display tabular-nums">
             +REP {stats.repScore}/{stats.repMax}
           </span>
           <span className="text-[11px] text-muted-foreground font-medium">{stats.nextTier}</span>
         </div>
-        <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
+        <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
@@ -290,11 +311,11 @@ function LeaderboardHeroBanner({
   )
 }
 
-// Helper to format currency with K/M suffix
+// Helper to format currency with K/M suffix (space-separated thousands)
 function formatPnl(value: number): string {
   if (value >= 1000000) return `+$${(value / 1000000).toFixed(1)}M`
   if (value >= 1000) return `+$${(value / 1000).toFixed(0)}K`
-  return `+$${value.toLocaleString()}`
+  return `+$${fmt(value)}`
 }
 
 // Get highlight stats for a user based on current tab
@@ -305,7 +326,7 @@ function getHighlightValues(user: LeaderboardUser, tab: MainTab, sub: ActivitySu
     return [
       { label: "Graph PNL", value: formatPnl(user.graphPnl) },
       { label: "Onchain PNL", value: formatPnl(user.onchainPnl) },
-      { label: "Followers", value: user.smartFollowers.toLocaleString() },
+      { label: "Followers", value: fmt(user.smartFollowers) },
     ]
   }
   if (tab === "social-graph") {
@@ -315,7 +336,7 @@ function getHighlightValues(user: LeaderboardUser, tab: MainTab, sub: ActivitySu
     return [{ label: "Onchain PNL", value: formatPnl(user.onchainPnl) }]
   }
   if (tab === "activity" && sub === "social") {
-    return [{ label: "Followers", value: user.smartFollowers.toLocaleString() }]
+    return [{ label: "Followers", value: fmt(user.smartFollowers) }]
   }
   return []
 }
@@ -343,9 +364,21 @@ function LeaderboardRow({
     <div
       className={`flex items-center gap-2 md:gap-3 px-3 md:px-4 py-3 transition-colors ${
         isCurrentUser
-          ? "bg-primary/10 border-l-2 border-primary"
+          ? "rep-cmp-leaderboard-row-highlight relative z-[2]"
           : "hover:bg-muted/30"
       }`}
+      style={
+        isCurrentUser
+          ? {
+              // Override package highlight (rgba(25,38,49,0.8)) with a more
+              // transparent fill + backdrop blur so the page glow shows through
+              // but the row beneath isn't readable through the pinned card.
+              backgroundColor: "rgba(15, 24, 32, 0.55)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+            }
+          : undefined
+      }
     >
       <div className="w-10 md:w-14 flex-shrink-0">
         <span
@@ -397,12 +430,13 @@ function LeaderboardRow({
         </div>
       </div>
 
-      {/* Highlight stat columns — 3 columns on Total, 1 on other tabs */}
+      {/* Highlight stat columns — Figma: muted-gray PNL/Followers via
+          rep-text-table-muted (#7e7e7e). NOT green/positive. */}
       {isTotal ? (
         <>
           {highlights.map((hl) => (
             <div key={hl.label} className="hidden sm:block text-right flex-shrink-0 w-16 md:w-20">
-              <p className="font-mono text-[11px] md:text-xs font-medium text-positive">
+              <p className="rep-text-table-muted font-display tabular-nums text-[11px] md:text-xs font-medium">
                 {hl.value}
               </p>
               <p className="text-[8px] md:text-[9px] uppercase tracking-wider text-muted-foreground">
@@ -414,7 +448,7 @@ function LeaderboardRow({
       ) : (
         highlights.length > 0 && (
           <div className="hidden sm:block text-right flex-shrink-0 w-20 md:w-24">
-            <p className="font-mono text-xs md:text-sm font-medium text-positive">
+            <p className="rep-text-table-muted font-display tabular-nums text-xs md:text-sm font-medium">
               {highlights[0].value}
             </p>
             <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
@@ -424,13 +458,11 @@ function LeaderboardRow({
         )
       )}
 
+      {/* REP score — Figma: rep-text-leaderboard-score-accent (#8ce0ff cyan).
+          Space-separated thousands ("30 217"). */}
       <div className="text-right flex-shrink-0 w-14 md:w-16">
-        <p
-          className={`font-mono text-xs md:text-sm font-semibold ${
-            isCurrentUser ? "text-primary glow" : "text-foreground"
-          }`}
-        >
-          {score.toLocaleString()}
+        <p className="rep-text-leaderboard-score-accent font-display tabular-nums text-xs md:text-sm font-semibold">
+          {fmt(score)}
         </p>
       </div>
     </div>
@@ -478,40 +510,46 @@ export default function LeaderboardPage() {
   const scoreLabel = scoreLabelFor(mainTab, activitySub)
 
   return (
-    <PageShell
-      kicker="The graph speaks"
-      title={
-        <>
-          Top <em>verified</em> humans.
-        </>
-      }
-      subtitle="Ranked by REP — cross-platform, cross-domain, cross-life. The same score that earns chats, matches, and trust."
-    >
-      <div className="space-y-6 pb-24 md:pb-8">
+    <PageShell>
+      {/* HorizonGlow now lives globally in AppShell — applies to all
+          authenticated pages. Leaderboard panel's backdrop-blur(8px)
+          will still refract the arc into the wavy silhouette. */}
+      <div className="relative z-[1] space-y-6 pb-24 md:pb-8">
       {/* Hero banner — your rank overview across all categories */}
-      <LeaderboardHeroBanner tab={mainTab} activitySub={activitySub} />
+      <div className="flex justify-center">
+        <LeaderboardHeroBanner tab={mainTab} activitySub={activitySub} />
+      </div>
 
-      {/* Main tabs: Total | Social Graph | Activity */}
-      <div className="grid grid-cols-3 rounded-full p-1 bg-muted/50 border border-border">
-        {mainTabs.map((t) => {
-          const Icon = t.icon
-          const active = mainTab === t.id
-          return (
-            <button
-              key={t.id}
-              onClick={() => setMainTab(t.id)}
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-full text-xs font-medium transition-all ${
-                active
-                  ? "bg-primary text-primary-foreground shadow-[0_0_12px_var(--accent-glow)]"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              aria-pressed={active}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{t.label}</span>
-            </button>
-          )
-        })}
+      {/* Main tabs — Figma segment slider (362×33, cyan halo, glass blur).
+          Active pill positions are tuned to the 3 stops via
+          rep-cmp-segment-slider-active-bg-{total|social|onchain}. */}
+      <div className="flex justify-center">
+        <div className="rep-cmp-segment-slider">
+          <div
+            className={`rep-cmp-segment-slider-active-bg ${
+              mainTab === "total"
+                ? "rep-cmp-segment-slider-active-bg-total"
+                : mainTab === "social-graph"
+                  ? "rep-cmp-segment-slider-active-bg-social"
+                  : "rep-cmp-segment-slider-active-bg-onchain"
+            }`}
+          />
+          {mainTabs.map((t) => {
+            const Icon = t.icon
+            const active = mainTab === t.id
+            return (
+              <button
+                key={t.id}
+                onClick={() => setMainTab(t.id)}
+                className={`rep-cmp-segment-slider-tab gap-1.5 ${active ? "rep-cmp-segment-slider-tab-active" : ""}`}
+                aria-pressed={active}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                <span>{t.label}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Activity sub-pills: Onchain | Social */}
@@ -544,12 +582,13 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Leaderboard table (top 20 + inline "you" row after an ellipsis) */}
-      <div className="solid-card overflow-hidden">
+      {/* Leaderboard table — Figma rep-cmp-leaderboard-panel + header strip.
+          Panel: muted ring + backdrop blur. Header: muted gradient ring on top corners. */}
+      <div className="rep-cmp-leaderboard-panel mx-auto" style={{ maxWidth: "var(--width-rep-leaderboard-content, 726px)" }}>
         {/* Table header */}
-        <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 border-b border-border bg-muted/30 text-[9px] md:text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-          <div className="w-10 md:w-14">Rank</div>
-          <div className="flex-1">User</div>
+        <div className="rep-cmp-leaderboard-header-strip flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 text-[9px] md:text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+          <div className="w-10 md:w-14 relative z-[1]">Rank</div>
+          <div className="flex-1 relative z-[1]">User</div>
           {/* 3 columns on Total, 1 on other tabs */}
           {mainTab === "total" ? (
             <>
@@ -578,9 +617,12 @@ export default function LeaderboardPage() {
             />
           ))}
 
-          {/* Dotted gap + current user row (rank 200+) — kept inline so the
-              user's true position is visible when they scroll all the way
-              down, giving context relative to the top-20. */}
+          {/* Dotted gap + current user row (rank 200+).
+              The pinned row uses position:sticky so it stays visible at
+              the bottom of the viewport while scrolling the table; once
+              the user scrolls past its natural position, it un-sticks
+              and sits inline with the dotted divider. Single source of
+              truth — the previous duplicate fixed GlassTile is gone. */}
           {currentUserEntry && (
             <>
               <div
@@ -589,119 +631,20 @@ export default function LeaderboardPage() {
               >
                 . . .
               </div>
-              <LeaderboardRow
-                user={currentUserEntry.user}
-                rank={currentUserEntry.rank}
-                score={scoreFor(currentUserEntry.user, mainTab, activitySub)}
-                isCurrentUser
-                tab={mainTab}
-                activitySub={activitySub}
-              />
+              <div className="sticky bottom-4 md:bottom-6 z-[5]">
+                <LeaderboardRow
+                  user={currentUserEntry.user}
+                  rank={currentUserEntry.rank}
+                  score={scoreFor(currentUserEntry.user, mainTab, activitySub)}
+                  isCurrentUser
+                  tab={mainTab}
+                  activitySub={activitySub}
+                />
+              </div>
             </>
           )}
         </div>
       </div>
-
-      {/* Sticky "Your position" card — pinned to the bottom of the viewport
-          so the user always sees where they stand while scrolling the top
-          of the board. Bottom offset leaves room for the mobile nav bar.
-          On desktop we offset left by the sidebar width (md:ml-56) so the
-          pinned card sits centered over the main content column rather
-          than the whole viewport. */}
-      {currentUserEntry && (() => {
-        const stickyHighlights = getHighlightValues(currentUserEntry.user, mainTab, activitySub)
-        const isTotal = mainTab === "total"
-        return (
-          <div
-            className="fixed left-0 right-0 md:left-56 bottom-16 md:bottom-4 z-30 pointer-events-none px-4"
-            aria-label="Your current leaderboard position"
-          >
-            <div className="max-w-3xl mx-auto pointer-events-auto">
-              <div className="solid-card border-primary/40 shadow-[0_8px_32px_rgba(0,0,0,0.45)] ring-1 ring-primary/30 backdrop-blur">
-                <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-3">
-                  <div className="w-10 md:w-14 flex-shrink-0">
-                    <span className="font-mono text-xs md:text-sm text-primary font-bold">
-                      #{currentUserEntry.rank.toLocaleString()}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                    <div className="relative flex-shrink-0">
-                      <div
-                        className={`h-8 w-8 md:h-9 md:w-9 rounded-full overflow-hidden ring-2 ring-offset-1 ring-offset-background flex items-center justify-center ${
-                          rankRingColors[currentUserEntry.user.rankTier] || "ring-primary"
-                        }`}
-                      >
-                        {currentUserEntry.user.avatarUrl ? (
-                          <img
-                            src={currentUserEntry.user.avatarUrl || "/placeholder.svg"}
-                            alt={currentUserEntry.user.handle}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <User className="h-4 w-4 text-primary" />
-                        )}
-                      </div>
-                      <img
-                        src={rankBadges[currentUserEntry.user.rankTier] || rankBadges["pilgrim"]}
-                        alt={currentUserEntry.user.rankTier}
-                        className="absolute -bottom-1 -right-1 h-4 w-4 md:h-5 md:w-5 object-contain z-10 drop-shadow-md"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs md:text-sm font-medium text-primary truncate">
-                        {currentUserEntry.user.displayName}
-                        <span className="ml-1 md:ml-2 text-[9px] md:text-[10px] text-muted-foreground font-normal">
-                          (You)
-                        </span>
-                      </p>
-                      <p className="text-[10px] md:text-xs text-muted-foreground truncate">
-                        @{currentUserEntry.user.handle}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Highlight stats — 3 on Total, 1 on other tabs */}
-                  {isTotal ? (
-                    <>
-                      {stickyHighlights.map((hl) => (
-                        <div key={hl.label} className="hidden sm:block text-right flex-shrink-0">
-                          <p className="font-mono text-[11px] md:text-xs font-medium text-positive">
-                            {hl.value}
-                          </p>
-                          <p className="text-[8px] md:text-[9px] uppercase tracking-wider text-muted-foreground">
-                            {hl.label}
-                          </p>
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    stickyHighlights.length > 0 && (
-                      <div className="hidden sm:block text-right flex-shrink-0">
-                        <p className="font-mono text-xs md:text-sm font-medium text-positive">
-                          {stickyHighlights[0].value}
-                        </p>
-                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                          {stickyHighlights[0].label}
-                        </p>
-                      </div>
-                    )
-                  )}
-
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-mono text-xs md:text-sm font-semibold text-primary glow">
-                      {scoreFor(currentUserEntry.user, mainTab, activitySub).toLocaleString()}
-                    </p>
-                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                      {scoreLabel}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
       </div>
     </PageShell>
   )
