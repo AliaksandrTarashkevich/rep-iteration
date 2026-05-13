@@ -37,7 +37,6 @@ import { useAuth, type Achievement } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { YourNetworkCard } from "@/components/your-network-card"
-import { ConnectionGraph } from "@/components/connection-graph"
 import { ConnectedAccounts } from "@/components/connected-accounts"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -351,7 +350,7 @@ export default function ProfilePage() {
               <Num className="text-ink">
                 {user.totalUsers.toLocaleString()}
               </Num>{" "}
-              verified humans.
+              users.
             </div>
           </div>
         </div>
@@ -368,71 +367,6 @@ export default function ProfilePage() {
             </p>
           </div>
         </GlassTile>
-
-        {/* 4-up M1 stat tiles — REP glass with bright stroke ring */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <GlassTile variant="bright" className="!p-4">
-            <MonoCap size="sm">REP</MonoCap>
-            <div className="mt-2">
-              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
-                {user.totalRep.toLocaleString()}
-              </span>
-            </div>
-          </GlassTile>
-          <Link href="/leaderboard" className="contents">
-            <GlassTile variant="bright" interactive className="!p-4">
-              <MonoCap size="sm">RANK</MonoCap>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="font-display text-[20px] font-medium leading-none text-ink-mute">#</span>
-                <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-accent tabular-nums rep-text-shadow-glow">
-                  {user.rank}
-                </span>
-              </div>
-            </GlassTile>
-          </Link>
-          <GlassTile variant="bright" className="!p-4">
-            <MonoCap size="sm">SMART</MonoCap>
-            <div className="mt-2">
-              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
-                {(user.metrics.smartFollowers || 0).toLocaleString()}
-              </span>
-            </div>
-          </GlassTile>
-          <GlassTile variant="bright" className="!p-4">
-            <MonoCap size="sm">ACHIEV.</MonoCap>
-            <div className="mt-2">
-              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
-                {earnedAchievements.length}
-              </span>
-            </div>
-          </GlassTile>
-        </div>
-
-        {/* Action pill row */}
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/leaderboard"
-            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring"
-          >
-            Grow your REP
-          </Link>
-          <Link
-            href="/stories"
-            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring"
-          >
-            Stories
-          </Link>
-          <button
-            onClick={handleShare}
-            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring md:hidden"
-          >
-            <Share2 size={12} />
-            Share
-          </button>
-        </div>
-
-        {/* Connected accounts — keeps existing component, now in new shell */}
-        <ConnectedAccounts onConnect={() => router.push("/settings")} />
 
       {/* Your Chats — upgraded preview. Each card now includes member
           avatars, an achievement-requirement badge, and a blue dot when
@@ -569,6 +503,217 @@ export default function ProfilePage() {
           </div>
         </div>
       ) : null}
+
+      {/* Achievements Preview - Big Blocks */}
+      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <SectionTitle className="text-xl">ACHIEVEMENTS</SectionTitle>
+            {achievementBadgeCount > 0 && (
+              <span
+                // Medium weight + explicit white so the count stays clean
+                // on the vivid red/blue pill — matches the sidebar + mobile
+                // nav treatment.
+                className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-medium text-white animate-pulse ${
+                  achievementBadgeIsUnseen ? "bg-destructive" : "bg-accent"
+                }`}
+              >
+                {achievementBadgeCount}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-sm text-muted-foreground">
+              {earnedAchievements.length} / {achievements.length} earned
+            </span>
+            {/* Show mintable achievements count */}
+            {mintableAchievementsCount > 0 && (
+              <span className="text-xs font-medium text-accent">
+                {mintableAchievementsCount} ready to mint
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Big Achievement Blocks - Top 3 */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          {earnedAchievements.slice(0, 3).map((achievement) => {
+            const style = getRarityStyle(achievement.rarity)
+            return (
+              <div
+                key={achievement.id}
+                className={`relative p-5 rounded-xl border ${style.border} ${style.bg} ${style.glow} transition-all hover:scale-[1.02]`}
+              >
+                {achievement.isNew && (
+                  <div className="absolute top-2 right-2">
+                    <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
+                  </div>
+                )}
+                <div className="flex flex-col items-center text-center">
+                  {achievement.imageUrl ? (
+                    <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-border mb-3">
+                      <img 
+                        src={achievement.imageUrl} 
+                        alt={achievement.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className={`p-4 rounded-xl ${style.bg} mb-3`}>
+                      <AchievementIcon icon={achievement.icon} className={`h-10 w-10 ${style.text}`} />
+                    </div>
+                  )}
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider mb-2 ${style.badge}`}>
+                    {achievement.rarity}
+                  </span>
+                  <h3 className="font-semibold text-foreground mb-1">
+                    {achievement.name}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                    {achievement.description}
+                  </p>
+                  <span className={`text-sm font-bold ${style.text}`}>
+                    +{achievement.repReward} REP
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <Link href="/achievements" className="flex items-center justify-center">
+          <Button variant="outline" className="w-full max-w-xs">
+            View all
+            <ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
+        </Link>
+      </div>
+
+      {/* Leaderboard Position */}
+      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
+        <div className="text-center mb-6">
+          <SectionTitle className="text-xl">LEADERBOARDS</SectionTitle>
+        </div>
+
+        {/* Mirrors /leaderboard column structure: Total / Connections Power /
+            Onchain / Social. Mock numbers for the 3 secondary ranks until
+            wired to real data. */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Total:</p>
+            <p className="text-2xl font-bold">
+              <span className="text-primary">#</span>{user.rank}
+              <span className="text-sm text-muted-foreground">/{user.totalUsers}</span>
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Connections Power:</p>
+            <p className="text-2xl font-bold">
+              <span className="text-primary">#</span>5
+              <span className="text-sm text-muted-foreground">/{user.totalUsers}</span>
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Onchain:</p>
+            <p className="text-2xl font-bold">
+              <span className="text-primary">#</span>56
+              <span className="text-sm text-muted-foreground">/1256</span>
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Social:</p>
+            <p className="text-2xl font-bold">
+              <span className="text-primary">#</span>150
+              <span className="text-sm text-muted-foreground">/1256</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-sm mb-2">
+            <span className="text-muted-foreground">Top 300</span>
+            <span className="text-primary">+REP {user.totalRep}/1200</span>
+            <span className="text-muted-foreground">Top 200</span>
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-primary/50 to-primary rounded-full"
+              style={{ width: `${Math.min((user.totalRep / 1200) * 100, 100)}%` }}
+            />
+          </div>
+        </div>
+
+        <Link href="/leaderboard" className="flex items-center justify-center">
+          <Button variant="outline" className="w-full max-w-xs">
+            View details
+          </Button>
+        </Link>
+      </div>
+
+        {/* 4-up M1 stat tiles — REP glass with bright stroke ring */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <GlassTile variant="bright" className="!p-4">
+            <MonoCap size="sm">REP</MonoCap>
+            <div className="mt-2">
+              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
+                {user.totalRep.toLocaleString()}
+              </span>
+            </div>
+          </GlassTile>
+          <Link href="/leaderboard" className="contents">
+            <GlassTile variant="bright" interactive className="!p-4">
+              <MonoCap size="sm">RANK</MonoCap>
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="font-display text-[20px] font-medium leading-none text-ink-mute">#</span>
+                <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-accent tabular-nums rep-text-shadow-glow">
+                  {user.rank}
+                </span>
+              </div>
+            </GlassTile>
+          </Link>
+          <GlassTile variant="bright" className="!p-4">
+            <MonoCap size="sm">X FOLLOWERS</MonoCap>
+            <div className="mt-2">
+              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
+                {(user.metrics.smartFollowers || 0).toLocaleString()}
+              </span>
+            </div>
+          </GlassTile>
+          <GlassTile variant="bright" className="!p-4">
+            <MonoCap size="sm">ACHIEV.</MonoCap>
+            <div className="mt-2">
+              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
+                {earnedAchievements.length}
+              </span>
+            </div>
+          </GlassTile>
+        </div>
+
+        {/* Action pill row */}
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/leaderboard"
+            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring"
+          >
+            Grow your REP
+          </Link>
+          <Link
+            href="/stories"
+            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring"
+          >
+            Stories
+          </Link>
+          <button
+            onClick={handleShare}
+            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring md:hidden"
+          >
+            <Share2 size={12} />
+            Share
+          </button>
+        </div>
+
+        {/* Connected accounts — keeps existing component, now in new shell */}
+        <ConnectedAccounts onConnect={() => router.push("/settings")} />
 
       {/* =================================================================
           WHAT TO DO NEXT — quest log
@@ -736,278 +881,6 @@ export default function ProfilePage() {
             </div>
           )
         })()}
-      </div>
-
-      {/* Achievements Preview - Big Blocks */}
-      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <SectionTitle className="text-xl">ACHIEVEMENTS</SectionTitle>
-            {achievementBadgeCount > 0 && (
-              <span
-                // Medium weight + explicit white so the count stays clean
-                // on the vivid red/blue pill — matches the sidebar + mobile
-                // nav treatment.
-                className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-medium text-white animate-pulse ${
-                  achievementBadgeIsUnseen ? "bg-destructive" : "bg-accent"
-                }`}
-              >
-                {achievementBadgeCount}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col items-end gap-1">
-            <span className="text-sm text-muted-foreground">
-              {earnedAchievements.length} / {achievements.length} earned
-            </span>
-            {/* Show mintable achievements count */}
-            {mintableAchievementsCount > 0 && (
-              <span className="text-xs font-medium text-accent">
-                {mintableAchievementsCount} ready to mint
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Big Achievement Blocks - Top 3 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-          {earnedAchievements.slice(0, 3).map((achievement) => {
-            const style = getRarityStyle(achievement.rarity)
-            return (
-              <div
-                key={achievement.id}
-                className={`relative p-5 rounded-xl border ${style.border} ${style.bg} ${style.glow} transition-all hover:scale-[1.02]`}
-              >
-                {achievement.isNew && (
-                  <div className="absolute top-2 right-2">
-                    <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
-                  </div>
-                )}
-                <div className="flex flex-col items-center text-center">
-                  {achievement.imageUrl ? (
-                    <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-border mb-3">
-                      <img 
-                        src={achievement.imageUrl} 
-                        alt={achievement.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className={`p-4 rounded-xl ${style.bg} mb-3`}>
-                      <AchievementIcon icon={achievement.icon} className={`h-10 w-10 ${style.text}`} />
-                    </div>
-                  )}
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider mb-2 ${style.badge}`}>
-                    {achievement.rarity}
-                  </span>
-                  <h3 className="font-semibold text-foreground mb-1">
-                    {achievement.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                    {achievement.description}
-                  </p>
-                  <span className={`text-sm font-bold ${style.text}`}>
-                    +{achievement.repReward} REP
-                  </span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        <Link href="/achievements" className="flex items-center justify-center">
-          <Button variant="outline" className="w-full max-w-xs">
-            View all
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
-        </Link>
-      </div>
-
-      {/* Leaderboard Position */}
-      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
-        <div className="text-center mb-6">
-          <SectionTitle className="text-xl">LEADERBOARDS</SectionTitle>
-        </div>
-
-        {/* Mirrors /leaderboard column structure: Total / Social Graph /
-            Onchain / Social. Mock numbers for the 3 secondary ranks until
-            wired to real data. */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Total:</p>
-            <p className="text-2xl font-bold">
-              <span className="text-primary">#</span>{user.rank}
-              <span className="text-sm text-muted-foreground">/{user.totalUsers}</span>
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Social Graph:</p>
-            <p className="text-2xl font-bold">
-              <span className="text-primary">#</span>5
-              <span className="text-sm text-muted-foreground">/{user.totalUsers}</span>
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Onchain:</p>
-            <p className="text-2xl font-bold">
-              <span className="text-primary">#</span>56
-              <span className="text-sm text-muted-foreground">/1256</span>
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Social:</p>
-            <p className="text-2xl font-bold">
-              <span className="text-primary">#</span>150
-              <span className="text-sm text-muted-foreground">/1256</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Top 300</span>
-            <span className="text-primary">+REP {user.totalRep}/1200</span>
-            <span className="text-muted-foreground">Top 200</span>
-          </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-primary/50 to-primary rounded-full"
-              style={{ width: `${Math.min((user.totalRep / 1200) * 100, 100)}%` }}
-            />
-          </div>
-        </div>
-
-        <Link href="/leaderboard" className="flex items-center justify-center">
-          <Button variant="outline" className="w-full max-w-xs">
-            View details
-          </Button>
-        </Link>
-      </div>
-
-      {/* Connect More - Growth CTA */}
-      <div className="rep-surface-glass-blur rep-glass-stroke-bright p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Link2 className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">
-              Connect more. Earn more.
-            </h2>
-          </div>
-          <span className="text-xs font-medium text-positive">+140 REP earned</span>
-        </div>
-
-        {/* Visual graph above the connection buttons — shows connected vs
-            unconnected sources, and the REP bonus on each unconnected node. */}
-        <ConnectionGraph
-          nodes={[
-            { id: "twitter",   label: "X",         connected: hasTwitter, repBonus: 35 },
-            { id: "evm",       label: "EVM",       connected: hasWallet,  repBonus: 35 },
-            { id: "solana",    label: "Solana",    connected: hasWallet,  repBonus: 35 },
-            { id: "base",      label: "Base",      connected: hasWallet,  repBonus: 35 },
-            { id: "telegram",  label: "Telegram",  connected: true,       repBonus: 35 },
-            { id: "farcaster", label: "Farcaster", connected: false,      repBonus: 35 },
-            { id: "email",     label: "Email",     connected: hasEmail,   repBonus: 30 },
-          ]}
-          qualityScore={72}
-        />
-
-        <div className="space-y-3">
-          {/* Connected accounts with green checkmark and REP earned */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-positive/5 border border-positive/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-positive/20 text-positive">
-                <Twitter className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">X (Twitter)</p>
-                <p className="text-xs text-muted-foreground">@{user.handle}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-positive">+35 REP</span>
-              <CheckCircle2 className="h-5 w-5 text-positive" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between p-3 rounded-lg bg-positive/5 border border-positive/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-positive/20 text-positive">
-                <EthereumIcon className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">EVM Wallet</p>
-                <p className="text-xs text-muted-foreground">{user.walletAddress}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-positive">+35 REP</span>
-              <CheckCircle2 className="h-5 w-5 text-positive" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between p-3 rounded-lg bg-positive/5 border border-positive/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-positive/20 text-positive">
-                <SolanaIcon className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Solana Wallet</p>
-                <p className="text-xs text-muted-foreground">7xKX...9dFe</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-positive">+35 REP</span>
-              <CheckCircle2 className="h-5 w-5 text-positive" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between p-3 rounded-lg bg-positive/5 border border-positive/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-positive/20 text-positive">
-                <TelegramIcon className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Telegram</p>
-                <p className="text-xs text-muted-foreground">@{user.handle}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-positive">+35 REP</span>
-              <CheckCircle2 className="h-5 w-5 text-positive" />
-            </div>
-          </div>
-
-          {/* Not connected - CTAs with REP reward */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border hover:border-primary/40 transition-colors cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted text-muted-foreground">
-                <FarcasterIcon className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Farcaster</p>
-                <p className="text-xs text-muted-foreground">Connect to earn REP</p>
-              </div>
-            </div>
-            <Button size="sm" className="bg-primary hover:bg-primary/90">
-              Connect +35 REP
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border hover:border-primary/40 transition-colors cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted text-muted-foreground">
-                <Mail className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Email</p>
-                <p className="text-xs text-muted-foreground">Get notified on rewards</p>
-              </div>
-            </div>
-            <Button size="sm" className="bg-primary hover:bg-primary/90">
-              Add +30 REP
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* Your Network — pyramid visualization + How It Works.

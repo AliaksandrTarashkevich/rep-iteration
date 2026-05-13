@@ -2,15 +2,24 @@
 
 import { useState } from "react"
 import { Check, Plus, Copy, X as XIcon, RefreshCw, Wallet } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 // ============================================================================
-// CONNECTED ACCOUNTS — single compact card
-// Merges the old "Social Connections" + "Connected Wallets" cards into one
-// horizontal scrollable row of circular icons. Connected accounts are bright
-// with a green checkmark. Unconnected ones are grey/dashed with a "+" overlay
-// and a small REP bonus label beneath. Click a connected account to expand
-// a small dropdown with details (handle, address, sync status). Click an
-// unconnected one to trigger the connect flow.
+// CONNECTED ACCOUNTS — two side-by-side cards
+//   • Social connections:  X / Telegram / Farcaster (+ "Add more")
+//   • Connected wallets:   EVM Wallet / Solana Wallet (+ "Add wallet" — each
+//     new wallet pays REP, even when the user already has one connected of
+//     the same kind, so multi-wallet users keep earning)
+//
+// Cards stack on mobile, sit side-by-side on md+. Each tile keeps the same
+// click semantics: connected → expand details popover; unconnected → trigger
+// onConnect flow.
 // ============================================================================
 
 export interface ConnectedAccount {
@@ -18,6 +27,8 @@ export interface ConnectedAccount {
   label: string
   type: "social" | "wallet"
   iconUrl?: string
+  /** When true, render a lucide Wallet glyph instead of an image. */
+  walletIcon?: boolean
   connected: boolean
   handle?: string
   address?: string
@@ -58,22 +69,10 @@ const DEFAULT_ACCOUNTS: ConnectedAccount[] = [
     repReward: 50,
   },
   {
-    id: "eth",
-    label: "Ethereum",
+    id: "evm",
+    label: "EVM Wallet",
     type: "wallet",
-    iconUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/eth-1WFCZw0qoju6H0sBfcwXPLXZToDpIE.png",
-    connected: true,
-    address: "0x1a2b...9f0e",
-    lastSynced: "1 min ago",
-    repReward: 35,
-  },
-  {
-    id: "base",
-    label: "Base",
-    type: "wallet",
-    iconUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/base-NN1OcTMXsH4ZO02VfIEqnTH43vLkWY.png",
+    walletIcon: true,
     connected: true,
     address: "0x1a2b...9f0e",
     lastSynced: "1 min ago",
@@ -81,7 +80,7 @@ const DEFAULT_ACCOUNTS: ConnectedAccount[] = [
   },
   {
     id: "solana",
-    label: "Solana",
+    label: "Solana Wallet",
     type: "wallet",
     iconUrl:
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sol-tkXP2sWc2bqJuH8kLsR1oKVbyVtSRr.png",
@@ -90,14 +89,9 @@ const DEFAULT_ACCOUNTS: ConnectedAccount[] = [
     lastSynced: "3 min ago",
     repReward: 35,
   },
-  {
-    id: "bnb",
-    label: "BNB Chain",
-    type: "wallet",
-    connected: false,
-    repReward: 50,
-  },
 ]
+
+const ADD_WALLET_REP_REWARD = 30
 
 function formatAddress(addr?: string) {
   if (!addr) return ""
@@ -114,11 +108,18 @@ export function ConnectedAccounts({
 }) {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [walletPickerOpen, setWalletPickerOpen] = useState(false)
 
-  const connectedCount = accounts.filter((a) => a.connected).length
-  const totalRepEarned = accounts
-    .filter((a) => a.connected)
-    .reduce((sum, a) => sum + a.repReward, 0)
+  // Wallet picker just closes the modal — in a real app this hands off to
+  // the wallet provider (WalletConnect, Phantom, etc.) right inside the
+  // popup, not by redirecting away. For the prototype the close is enough
+  // to demo the flow.
+  const handleWalletPick = (_kind: "evm" | "solana") => {
+    setWalletPickerOpen(false)
+  }
+
+  const socialAccounts = accounts.filter((a) => a.type === "social")
+  const walletAccounts = accounts.filter((a) => a.type === "wallet")
 
   const expandedAccount = expanded
     ? accounts.find((a) => a.id === expanded)
@@ -139,138 +140,86 @@ export function ConnectedAccounts({
   }
 
   return (
-    <div className="rep-surface-glass-blur rep-glass-stroke-bright p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3 gap-2">
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Connected accounts</p>
-          <p className="text-[11px] text-muted-foreground/70 mt-0.5">
-            {connectedCount} of {accounts.length} connected
-          </p>
-        </div>
-        <span className="text-xs font-medium text-positive whitespace-nowrap">
-          +{totalRepEarned} REP earned
-        </span>
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <AccountsCard
+          title="Social connections"
+          accounts={socialAccounts}
+          addLabel="Add more"
+          addRepReward={null}
+          onTileClick={handleTileClick}
+          onAddClick={() => onConnect?.("add-social")}
+          expandedId={expanded}
+        />
+        <AccountsCard
+          title="Connected wallets"
+          accounts={walletAccounts}
+          addLabel="Add wallet"
+          addRepReward={ADD_WALLET_REP_REWARD}
+          onTileClick={handleTileClick}
+          onAddClick={() => setWalletPickerOpen(true)}
+          expandedId={expanded}
+        />
       </div>
 
-      {/* Flex-wrap row — fits all tiles without cutting off; wraps to a
-          second row on narrow viewports. */}
-      <div
-        className="flex items-start flex-wrap gap-x-4 gap-y-5 pt-1"
-        role="list"
-        aria-label="Connected accounts"
-      >
-        {accounts.map((acc) => {
-          const isActive = expanded === acc.id
-          return (
+      <Dialog open={walletPickerOpen} onOpenChange={setWalletPickerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add a wallet</DialogTitle>
+            <DialogDescription>
+              Each new wallet you connect earns +{ADD_WALLET_REP_REWARD} REP.
+              You can connect multiple wallets of the same kind.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 pt-2">
             <button
-              key={acc.id}
-              onClick={() => handleTileClick(acc)}
-              className="group relative flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
-              aria-label={
-                acc.connected
-                  ? `${acc.label}: connected. Tap for details`
-                  : `Connect ${acc.label} for +${acc.repReward} REP`
-              }
-              aria-expanded={acc.connected ? isActive : undefined}
+              onClick={() => handleWalletPick("evm")}
+              className="group flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-4 text-left hover:border-primary/40 hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/60"
             >
-              <div className="relative">
-                {/* Tile */}
-                <div
-                  className={`h-11 w-11 rounded-full flex items-center justify-center transition-all ${
-                    acc.connected
-                      ? `bg-positive/10 border border-positive/30 ${
-                          isActive
-                            ? "ring-2 ring-primary/60 shadow-[0_0_15px_var(--accent-glow)]"
-                            : ""
-                        }`
-                      : "bg-muted/20 border border-dashed border-primary/40 group-hover:border-primary/70 group-hover:bg-primary/5"
-                  }`}
-                >
-                  {acc.iconUrl ? (
-                    <img
-                      src={acc.iconUrl}
-                      alt=""
-                      className={`h-5 w-5 ${
-                        acc.connected ? "" : "opacity-50 grayscale"
-                      }`}
-                    />
-                  ) : (
-                    <span
-                      className={`text-[10px] font-bold uppercase ${
-                        acc.connected ? "text-foreground" : "text-muted-foreground"
-                      }`}
-                    >
-                      {acc.label.slice(0, 3)}
-                    </span>
-                  )}
-                </div>
-
-                {/* Badge overlay: green check (connected) OR plus (unconnected) */}
-                {acc.connected ? (
-                  <span
-                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-positive flex items-center justify-center ring-2 ring-card"
-                    aria-hidden="true"
-                  >
-                    <Check className="h-2.5 w-2.5 text-background" strokeWidth={3} />
-                  </span>
-                ) : (
-                  <span
-                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary/90 flex items-center justify-center ring-2 ring-card group-hover:scale-110 transition-transform"
-                    aria-hidden="true"
-                  >
-                    <Plus className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3} />
-                  </span>
-                )}
+              <div className="h-10 w-10 flex-shrink-0 rounded-full bg-positive/10 border border-positive/30 flex items-center justify-center">
+                <Wallet className="h-5 w-5 text-foreground" />
               </div>
-
-              {/* Label under tile */}
-              <span
-                className={`text-[10px] font-medium truncate max-w-[56px] ${
-                  acc.connected ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {acc.label}
-              </span>
-
-              {/* REP bonus beneath unconnected */}
-              {!acc.connected && (
-                <span className="text-[10px] font-semibold text-primary leading-none">
-                  +{acc.repReward} REP
-                </span>
-              )}
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">EVM Wallet</p>
+                <p className="text-xs text-muted-foreground">
+                  ETH, Base, Polygon, Arbitrum…
+                </p>
+                <p className="mt-1 text-[10px] font-semibold text-primary">
+                  +{ADD_WALLET_REP_REWARD} REP
+                </p>
+              </div>
             </button>
-          )
-        })}
 
-        {/* "+ Add another wallet" tile — always present so users can link
-            additional wallets (e.g., a second EVM address, a Ledger, a
-            fresh chain) even after their primary wallets are connected. */}
-        <button
-          onClick={() => onConnect?.("add-wallet")}
-          className="group relative flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
-          aria-label="Add another wallet"
-        >
-          <div className="relative">
-            <div className="h-11 w-11 rounded-full flex items-center justify-center bg-muted/20 border border-dashed border-primary/40 group-hover:border-primary/70 group-hover:bg-primary/5 transition-colors">
-              <Wallet className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-            <span
-              className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary/90 flex items-center justify-center ring-2 ring-card group-hover:scale-110 transition-transform"
-              aria-hidden="true"
+            <button
+              onClick={() => handleWalletPick("solana")}
+              className="group flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-4 text-left hover:border-primary/40 hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/60"
             >
-              <Plus className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3} />
-            </span>
+              <div className="h-10 w-10 flex-shrink-0 rounded-full bg-positive/10 border border-positive/30 flex items-center justify-center overflow-hidden">
+                <img
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sol-tkXP2sWc2bqJuH8kLsR1oKVbyVtSRr.png"
+                  alt=""
+                  className="h-5 w-5"
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Solana Wallet</p>
+                <p className="text-xs text-muted-foreground">
+                  Phantom, Backpack, Solflare…
+                </p>
+                <p className="mt-1 text-[10px] font-semibold text-primary">
+                  +{ADD_WALLET_REP_REWARD} REP
+                </p>
+              </div>
+            </button>
           </div>
-          <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[56px]">
-            Add wallet
-          </span>
-        </button>
-      </div>
+        </DialogContent>
+      </Dialog>
 
-      {/* Expanded dropdown for a connected account */}
+      {/* Shared expanded-account drawer — sits below both cards so the layout
+          doesn't reflow asymmetrically when an account is opened. */}
       {expandedAccount && expandedAccount.connected && (
-        <div className="mt-3 p-3 rounded-xl bg-background/60 border border-border relative animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="rep-surface-glass-blur rep-glass-stroke-bright p-3 relative animate-in fade-in slide-in-from-top-2 duration-200">
           <button
             onClick={() => setExpanded(null)}
             className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
@@ -281,7 +230,9 @@ export function ConnectedAccounts({
 
           <div className="flex items-center gap-3 pr-6">
             <div className="h-9 w-9 rounded-full bg-positive/10 border border-positive/30 flex items-center justify-center flex-shrink-0">
-              {expandedAccount.iconUrl ? (
+              {expandedAccount.walletIcon ? (
+                <Wallet className="h-4 w-4 text-foreground" />
+              ) : expandedAccount.iconUrl ? (
                 <img src={expandedAccount.iconUrl} alt="" className="h-4 w-4" />
               ) : (
                 <span className="text-[9px] font-bold text-foreground">
@@ -303,7 +254,9 @@ export function ConnectedAccounts({
                   onClick={() => handleCopy(expandedAccount.address || "")}
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors font-mono"
                 >
-                  <span className="truncate">{formatAddress(expandedAccount.address)}</span>
+                  <span className="truncate">
+                    {formatAddress(expandedAccount.address)}
+                  </span>
                   {copied ? (
                     <Check className="h-3 w-3 text-positive flex-shrink-0" />
                   ) : (
@@ -326,5 +279,174 @@ export function ConnectedAccounts({
         </div>
       )}
     </div>
+  )
+}
+
+function AccountsCard({
+  title,
+  accounts,
+  addLabel,
+  addRepReward,
+  onTileClick,
+  onAddClick,
+  expandedId,
+}: {
+  title: string
+  accounts: ConnectedAccount[]
+  addLabel: string
+  /** REP earned per new connection added via the "+" tile, or null to hide. */
+  addRepReward: number | null
+  onTileClick: (acc: ConnectedAccount) => void
+  onAddClick: () => void
+  expandedId: string | null
+}) {
+  return (
+    <div className="rep-surface-glass-blur rep-glass-stroke-bright p-4">
+      <p className="text-xs text-muted-foreground mb-3">{title}:</p>
+
+      <div
+        className="flex items-start flex-wrap gap-x-4 gap-y-5 pt-1"
+        role="list"
+        aria-label={title}
+      >
+        {accounts.map((acc) => (
+          <AccountTile
+            key={acc.id}
+            account={acc}
+            isActive={expandedId === acc.id}
+            onClick={() => onTileClick(acc)}
+          />
+        ))}
+
+        <AddTile
+          label={addLabel}
+          repReward={addRepReward}
+          onClick={onAddClick}
+        />
+      </div>
+    </div>
+  )
+}
+
+function AccountTile({
+  account,
+  isActive,
+  onClick,
+}: {
+  account: ConnectedAccount
+  isActive: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group relative flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
+      aria-label={
+        account.connected
+          ? `${account.label}: connected. Tap for details`
+          : `Connect ${account.label} for +${account.repReward} REP`
+      }
+      aria-expanded={account.connected ? isActive : undefined}
+    >
+      <div className="relative">
+        <div
+          className={`h-11 w-11 rounded-full flex items-center justify-center transition-all ${
+            account.connected
+              ? `bg-positive/10 border border-positive/30 ${
+                  isActive
+                    ? "ring-2 ring-primary/60 shadow-[0_0_15px_var(--accent-glow)]"
+                    : ""
+                }`
+              : "bg-muted/20 border border-dashed border-primary/40 group-hover:border-primary/70 group-hover:bg-primary/5"
+          }`}
+        >
+          {account.walletIcon ? (
+            <Wallet
+              className={`h-5 w-5 ${
+                account.connected ? "text-foreground" : "text-muted-foreground opacity-60"
+              }`}
+            />
+          ) : account.iconUrl ? (
+            <img
+              src={account.iconUrl}
+              alt=""
+              className={`h-5 w-5 ${
+                account.connected ? "" : "opacity-50 grayscale"
+              }`}
+            />
+          ) : (
+            <span
+              className={`text-[10px] font-bold uppercase ${
+                account.connected ? "text-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {account.label.slice(0, 3)}
+            </span>
+          )}
+        </div>
+
+        {account.connected ? (
+          <span
+            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-positive flex items-center justify-center ring-2 ring-card"
+            aria-hidden="true"
+          >
+            <Check className="h-2.5 w-2.5 text-background" strokeWidth={3} />
+          </span>
+        ) : (
+          <span
+            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary/90 flex items-center justify-center ring-2 ring-card group-hover:scale-110 transition-transform"
+            aria-hidden="true"
+          >
+            <Plus className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3} />
+          </span>
+        )}
+      </div>
+
+      <span
+        className={`text-[10px] font-medium truncate max-w-[64px] ${
+          account.connected ? "text-foreground" : "text-muted-foreground"
+        }`}
+      >
+        {account.label}
+      </span>
+
+      {!account.connected && (
+        <span className="text-[10px] font-semibold text-primary leading-none">
+          +{account.repReward} REP
+        </span>
+      )}
+    </button>
+  )
+}
+
+function AddTile({
+  label,
+  repReward,
+  onClick,
+}: {
+  label: string
+  repReward: number | null
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group relative flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
+      aria-label={label}
+    >
+      <div className="relative">
+        <div className="h-11 w-11 rounded-full flex items-center justify-center bg-muted/20 border border-dashed border-primary/40 group-hover:border-primary/70 group-hover:bg-primary/5 transition-colors">
+          <Plus className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+        </div>
+      </div>
+      <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[64px]">
+        {label}
+      </span>
+      {repReward !== null && (
+        <span className="text-[10px] font-semibold text-primary leading-none">
+          +{repReward} REP
+        </span>
+      )}
+    </button>
   )
 }

@@ -100,7 +100,7 @@ function HowItWorksModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="How the social graph works"
+      aria-label="How your network works"
     >
       <div
         className="relative w-full max-w-md rep-surface-glass-blur rep-glass-stroke-bright p-6 animate-in zoom-in-95 duration-200"

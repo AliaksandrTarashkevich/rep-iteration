@@ -144,7 +144,7 @@ function ConnectModal({
           <p className="text-foreground/70 text-sm mb-2">
             {isWallet 
               ? "Link your wallet to reveal onchain reputation and earn bonus REP."
-              : "Link your X account to unlock social graph insights."
+              : "Link your X account to unlock your Connections Power."
             }
           </p>
           

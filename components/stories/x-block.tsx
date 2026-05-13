@@ -32,7 +32,7 @@ const TRIBE_COLORS: Record<string, { bg: string; text: string; bar: string }> = 
 
 // v2.2: rename SMART FOLLOWERS → INFLUENCE + tooltip (choly review)
 const INFLUENCE_TOOLTIP =
-  "Influence is calculated from your social graph: rank on X, activity, and the influence of accounts following you."
+  "Influence is calculated from your connections: rank on X, activity, and the influence of accounts following you."
 
 export function X1SmartFollowers() {
   const d = X_DATA.smartFollowers

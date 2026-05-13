@@ -44,7 +44,7 @@ export default function NetworkPage() {
       kicker="The compounding machine"
       title={
         <>
-          Referral <em>network</em>.
+          Connections <em>Power</em>.
         </>
       }
       subtitle="Every invite compounds your REP when they earn. The graph grows; every tier pays back up the chain."

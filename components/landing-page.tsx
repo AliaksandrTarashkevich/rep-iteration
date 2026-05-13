@@ -180,7 +180,7 @@ export function LandingPage() {
 
         <div className="mt-16 grid grid-cols-1 gap-8 border-t border-line pt-10 sm:grid-cols-3 md:mt-24">
           {[
-            ["3.5M", "verified humans"],
+            ["3.5M", "users"],
             ["30M", "profiles indexed"],
             ["0", "raw data stored"],
           ].map(([n, l]) => (

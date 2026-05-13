@@ -224,7 +224,7 @@ function LeaderboardHeroBanner({
   // 4-column rank overview: Total, Social Graph, Activity Onchain, Activity Social
   const rankColumns = [
     { id: "total",       label: "Total",       ...myStats.total },
-    { id: "socialGraph", label: "Social Graph", ...myStats.socialGraph },
+    { id: "socialGraph", label: "Connections Power", ...myStats.socialGraph },
     { id: "onchain",     label: "Onchain",     ...myStats.onchain },
     { id: "social",      label: "Social",      ...myStats.social },
   ]
@@ -503,7 +503,7 @@ export default function LeaderboardPage() {
 
   const mainTabs: { id: MainTab; label: string; icon: typeof Trophy }[] = [
     { id: "total",        label: "Total",        icon: Trophy },
-    { id: "social-graph", label: "Social Graph", icon: Network },
+    { id: "social-graph", label: "Connections Power", icon: Network },
     { id: "activity",     label: "Activity",     icon: Activity },
   ]
 

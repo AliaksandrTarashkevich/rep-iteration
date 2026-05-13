@@ -19,7 +19,7 @@ const X_STEPS = [
   "Connecting to X",
   "Checking subscribers",
   "Analyzing TwitterScore",
-  "Fetching social graph",
+  "Mapping your connections",
   "Finding your closest friends",
   "Calculating REP",
   "Finalizing profile",
