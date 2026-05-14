@@ -300,12 +300,26 @@ function AccountsCard({
   onAddClick: () => void
   expandedId: string | null
 }) {
+  // Sum REP already earned from connected accounts — used to show a single
+  // "+N REP earned" tag in the header so individual pills stay icon-only and
+  // compact (matches Mitya's profile mock).
+  const earnedRep = accounts
+    .filter((a) => a.connected)
+    .reduce((sum, a) => sum + a.repReward, 0)
+
   return (
-    <div className="rep-surface-glass-blur rep-glass-stroke-bright p-4">
-      <p className="text-xs text-muted-foreground mb-3">{title}:</p>
+    <div className="rep-surface-glass-blur rep-glass-stroke-bright px-4 py-3">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-muted-foreground">{title}:</p>
+        {earnedRep > 0 && (
+          <span className="text-[11px] font-semibold text-primary whitespace-nowrap">
+            +{earnedRep} REP earned
+          </span>
+        )}
+      </div>
 
       <div
-        className="flex items-start flex-wrap gap-x-4 gap-y-5 pt-1"
+        className="flex items-center flex-wrap gap-2"
         role="list"
         aria-label={title}
       >
@@ -340,7 +354,7 @@ function AccountTile({
   return (
     <button
       onClick={onClick}
-      className="group relative flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
+      className="group relative flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-full"
       aria-label={
         account.connected
           ? `${account.label}: connected. Tap for details`
@@ -350,7 +364,7 @@ function AccountTile({
     >
       <div className="relative">
         <div
-          className={`h-11 w-11 rounded-full flex items-center justify-center transition-all ${
+          className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${
             account.connected
               ? `bg-positive/10 border border-positive/30 ${
                   isActive
@@ -362,7 +376,7 @@ function AccountTile({
         >
           {account.walletIcon ? (
             <Wallet
-              className={`h-5 w-5 ${
+              className={`h-4 w-4 ${
                 account.connected ? "text-foreground" : "text-muted-foreground opacity-60"
               }`}
             />
@@ -370,13 +384,13 @@ function AccountTile({
             <img
               src={account.iconUrl}
               alt=""
-              className={`h-5 w-5 ${
+              className={`h-4 w-4 ${
                 account.connected ? "" : "opacity-50 grayscale"
               }`}
             />
           ) : (
             <span
-              className={`text-[10px] font-bold uppercase ${
+              className={`text-[9px] font-bold uppercase ${
                 account.connected ? "text-foreground" : "text-muted-foreground"
               }`}
             >
@@ -387,34 +401,20 @@ function AccountTile({
 
         {account.connected ? (
           <span
-            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-positive flex items-center justify-center ring-2 ring-card"
+            className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-positive flex items-center justify-center ring-2 ring-card"
             aria-hidden="true"
           >
-            <Check className="h-2.5 w-2.5 text-background" strokeWidth={3} />
+            <Check className="h-2 w-2 text-background" strokeWidth={3} />
           </span>
         ) : (
           <span
-            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary/90 flex items-center justify-center ring-2 ring-card group-hover:scale-110 transition-transform"
+            className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-primary/90 flex items-center justify-center ring-2 ring-card group-hover:scale-110 transition-transform"
             aria-hidden="true"
           >
-            <Plus className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3} />
+            <Plus className="h-2 w-2 text-primary-foreground" strokeWidth={3} />
           </span>
         )}
       </div>
-
-      <span
-        className={`text-[10px] font-medium truncate max-w-[64px] ${
-          account.connected ? "text-foreground" : "text-muted-foreground"
-        }`}
-      >
-        {account.label}
-      </span>
-
-      {!account.connected && (
-        <span className="text-[10px] font-semibold text-primary leading-none">
-          +{account.repReward} REP
-        </span>
-      )}
     </button>
   )
 }
@@ -428,25 +428,18 @@ function AddTile({
   repReward: number | null
   onClick: () => void
 }) {
+  // repReward intentionally unused in compact mode — the parent card surfaces
+  // the cumulative "+N REP earned" tag, so individual pills stay icon-only.
+  void repReward
   return (
     <button
       onClick={onClick}
-      className="group relative flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none"
+      className="group relative flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-full"
       aria-label={label}
     >
-      <div className="relative">
-        <div className="h-11 w-11 rounded-full flex items-center justify-center bg-muted/20 border border-dashed border-primary/40 group-hover:border-primary/70 group-hover:bg-primary/5 transition-colors">
-          <Plus className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-        </div>
+      <div className="h-9 w-9 rounded-full flex items-center justify-center bg-muted/20 border border-dashed border-primary/40 group-hover:border-primary/70 group-hover:bg-primary/5 transition-colors">
+        <Plus className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
       </div>
-      <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[64px]">
-        {label}
-      </span>
-      {repReward !== null && (
-        <span className="text-[10px] font-semibold text-primary leading-none">
-          +{repReward} REP
-        </span>
-      )}
     </button>
   )
 }

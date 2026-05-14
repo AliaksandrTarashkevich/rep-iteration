@@ -355,18 +355,80 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* AI one-liner — Fraunces italic in a glass tile */}
-        <GlassTile className="!p-5">
-          <div className="flex items-start gap-3">
-            <Sparkles
-              className="h-4 w-4 flex-shrink-0 text-accent mt-0.5"
-              aria-hidden="true"
-            />
-            <p className="font-serif text-[16px] italic leading-[1.5] text-ink">
-              &ldquo;{user.aiOneLiner}&rdquo;
-            </p>
-          </div>
-        </GlassTile>
+        {/* Connected accounts + wallets — compact "cloud" pair lives at the
+            top of the profile per Mitya's mock. Pills are icon-only with a
+            single "+N REP earned" tag per card. */}
+        <ConnectedAccounts onConnect={() => router.push("/settings")} />
+
+        {/* 4-up stat tiles — Performance / Position / Smart Followers /
+            Achievements. Mirrors the Mitya mock. */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <GlassTile variant="bright" className="!p-4">
+            <MonoCap size="sm">PERFORMANCE</MonoCap>
+            <div className="mt-2 flex items-baseline gap-1">
+              <span className="font-display text-[14px] font-medium leading-none text-ink-mute">Top</span>
+              <span className="font-display text-[28px] font-semibold leading-none tracking-[-0.02em] text-accent tabular-nums rep-text-shadow-glow">
+                {((user.rank / user.totalUsers) * 100).toFixed(0)}%
+              </span>
+            </div>
+          </GlassTile>
+          <Link href="/leaderboard" className="contents">
+            <GlassTile variant="bright" interactive className="!p-4">
+              <MonoCap size="sm">POSITION</MonoCap>
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="font-display text-[16px] font-medium leading-none text-ink-mute">#</span>
+                <span className="font-display text-[28px] font-semibold leading-none tracking-[-0.02em] text-accent tabular-nums rep-text-shadow-glow">
+                  {user.rank}
+                </span>
+              </div>
+            </GlassTile>
+          </Link>
+          <GlassTile variant="bright" className="!p-4">
+            <MonoCap size="sm">SMART FOLLOWERS</MonoCap>
+            <div className="mt-2">
+              <span className="font-display text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
+                {(user.metrics.smartFollowers || 0).toLocaleString()}
+              </span>
+            </div>
+          </GlassTile>
+          <Link href="/achievements" className="contents">
+            <GlassTile variant="bright" interactive className="!p-4 relative">
+              <MonoCap size="sm">ACHIEVEMENTS</MonoCap>
+              <div className="mt-2">
+                <span className="font-display text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
+                  {earnedAchievements.length}
+                </span>
+              </div>
+              {achievementBadgeCount > 0 && (
+                <span
+                  className={`absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-medium text-white ${
+                    achievementBadgeIsUnseen ? "bg-destructive" : "bg-accent"
+                  }`}
+                >
+                  {achievementBadgeCount}
+                </span>
+              )}
+            </GlassTile>
+          </Link>
+        </div>
+
+        {/* Two primary action pills — Grow your REP + Stories. Live right
+            above chats so the user always lands with their next action and
+            their rooms in view. */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            href="/leaderboard"
+            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring justify-center"
+          >
+            Grow your REP
+          </Link>
+          <Link
+            href="/stories"
+            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring justify-center"
+          >
+            Stories
+          </Link>
+        </div>
 
       {/* Your Chats — upgraded preview. Each card now includes member
           avatars, an achievement-requirement badge, and a blue dot when
@@ -650,70 +712,31 @@ export default function ProfilePage() {
         </Link>
       </div>
 
-        {/* 4-up M1 stat tiles — REP glass with bright stroke ring */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <GlassTile variant="bright" className="!p-4">
-            <MonoCap size="sm">REP</MonoCap>
-            <div className="mt-2">
-              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
-                {user.totalRep.toLocaleString()}
-              </span>
-            </div>
-          </GlassTile>
-          <Link href="/leaderboard" className="contents">
-            <GlassTile variant="bright" interactive className="!p-4">
-              <MonoCap size="sm">RANK</MonoCap>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="font-display text-[20px] font-medium leading-none text-ink-mute">#</span>
-                <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-accent tabular-nums rep-text-shadow-glow">
-                  {user.rank}
-                </span>
-              </div>
-            </GlassTile>
-          </Link>
-          <GlassTile variant="bright" className="!p-4">
-            <MonoCap size="sm">X FOLLOWERS</MonoCap>
-            <div className="mt-2">
-              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
-                {(user.metrics.smartFollowers || 0).toLocaleString()}
-              </span>
-            </div>
-          </GlassTile>
-          <GlassTile variant="bright" className="!p-4">
-            <MonoCap size="sm">ACHIEV.</MonoCap>
-            <div className="mt-2">
-              <span className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums rep-text-shadow-glow">
-                {earnedAchievements.length}
-              </span>
-            </div>
-          </GlassTile>
-        </div>
+        {/* AI one-liner — Fraunces italic in a glass tile. Sits below the
+            top fold (clouds / stats / chats / achievements / leaderboards)
+            since Mitya's mock prioritises actionable surfaces up top. */}
+        <GlassTile className="!p-5">
+          <div className="flex items-start gap-3">
+            <Sparkles
+              className="h-4 w-4 flex-shrink-0 text-accent mt-0.5"
+              aria-hidden="true"
+            />
+            <p className="font-serif text-[16px] italic leading-[1.5] text-ink">
+              &ldquo;{user.aiOneLiner}&rdquo;
+            </p>
+          </div>
+        </GlassTile>
 
-        {/* Action pill row */}
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/leaderboard"
-            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring"
-          >
-            Grow your REP
-          </Link>
-          <Link
-            href="/stories"
-            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring"
-          >
-            Stories
-          </Link>
+        {/* Mobile-only Share button — the desktop pill lives in PageShell. */}
+        <div className="md:hidden">
           <button
             onClick={handleShare}
-            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring md:hidden"
+            className="rep-btn rep-btn-ghost rep-btn-md rep-btn-pill rep-focus-ring"
           >
             <Share2 size={12} />
             Share
           </button>
         </div>
-
-        {/* Connected accounts — keeps existing component, now in new shell */}
-        <ConnectedAccounts onConnect={() => router.push("/settings")} />
 
       {/* =================================================================
           WHAT TO DO NEXT — quest log
